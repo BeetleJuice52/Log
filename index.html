@@ -1,1 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Log</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1420;--bg2:#131b28;--bg3:#192030;--border:#1e3048;--border2:#253a55;--text:#ddeeff;--text2:#8aaac8;--text3:#4a6a8a;--teal:#4af0c8;--gold:#f0d060;--purple:#b088ff;--orange:#ff9040;--red:#ff5555;--green:#30e888;--blue:#60b8ff}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow-x:hidden}
+::-webkit-scrollbar{width:2px}::-webkit-scrollbar-thumb{background:var(--border2)}
+.orb{font-family:'Orbitron',monospace}
+button{cursor:pointer;border:none;font-family:'Rajdhani',sans-serif}
+input{outline:none;font-family:'Rajdhani',sans-serif}
+input::placeholder{color:var(--text3)}
+#header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 18px 12px;position:sticky;top:0;z-index:50}
+#app-title{font-family:'Orbitron';font-size:26px;font-weight:900;color:#fff;letter-spacing:4px;text-shadow:0 0 20px rgba(74,240,200,0.2)}
+#sys-label{font-family:'Orbitron';font-size:9px;letter-spacing:4px;color:var(--text3);margin-bottom:3px}
+#pct-val{font-family:'Orbitron';font-size:22px;font-weight:700;transition:color 0.3s}
+#pct-label{font-family:'Orbitron';font-size:8px;color:var(--text3);letter-spacing:2px}
+#prog-wrap{margin-top:10px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
+#prog-bar{height:100%;width:0%;transition:width 0.5s ease;border-radius:2px}
+#date-strip{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+#train-badge{font-size:12px;color:var(--teal);font-weight:600}
+#macro-strip{display:flex;gap:8px;margin-top:10px}
+.mc{background:var(--bg3);border-radius:4px;padding:6px 10px;border:1px solid var(--border2)}
+.mcl{font-family:'Orbitron';font-size:7px;color:var(--text3);letter-spacing:1.5px;margin-bottom:2px}
+.mcv{font-family:'Orbitron';font-size:12px;font-weight:700}
+#cal-wrap{background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+#cal-wrap::-webkit-scrollbar{display:none}
+#cal-inner{display:flex;padding:8px 10px;gap:5px;min-width:max-content}
+.cd{min-width:42px;padding:7px 4px;border-radius:5px;text-align:center;background:transparent;border:1px solid transparent;transition:all 0.15s;cursor:pointer}
+.cd:hover{background:rgba(74,240,200,0.06)}
+.cd.today{background:var(--bg3);border-color:var(--border2)}
+.cd.active{background:#162a40;border-color:var(--teal)}
+#tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+#tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;padding:10px 13px;border-bottom:2px solid transparent;color:var(--text3);transition:all 0.15s;background:none}
+.tab.active{border-bottom-color:var(--teal);color:var(--teal)}
+.tab-icon{font-family:'Orbitron';font-size:8px;letter-spacing:1px;margin-bottom:2px}
+.tab-label{font-size:9px;letter-spacing:1.5px;font-weight:600;white-space:nowrap}
+.tab-badge{font-size:7px;margin-top:1px}
+#content{padding-bottom:60px}
+.sec{animation:fu 0.2s ease}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.row{cursor:pointer;transition:background 0.1s;border-bottom:1px solid var(--border)}
+.row:hover{background:rgba(255,255,255,0.03)}
+.row-done{background:#0d1c10!important}
+.ri{padding:13px 18px;display:flex;gap:12px;align-items:flex-start}
+.chk{width:19px;height:19px;flex-shrink:0;border-radius:3px;border:1.5px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;transition:all 0.15s;cursor:pointer;margin-top:1px}
+.chk.done{border-color:var(--teal);background:var(--teal);box-shadow:0 0 8px rgba(74,240,200,0.4)}
+.chk.done span{color:#0e1420;font-size:10px;font-weight:900;line-height:1}
+.chip{display:inline-block;border-radius:3px;padding:2px 7px;font-family:'Orbitron';font-size:8px;letter-spacing:1px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.card-hd{padding:12px 14px;border-bottom:1px solid var(--border)}
+.tg{display:flex;gap:8px;margin-bottom:12px}
+.tb{flex:1;padding:9px;border-radius:4px;font-family:'Orbitron';font-size:9px;letter-spacing:2px;background:var(--bg3);border:1px solid var(--border);color:var(--text3);transition:all 0.15s}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden}
+.sh{padding:12px 14px;display:flex;gap:12px;align-items:center;cursor:pointer;transition:background 0.1s}
+.sh:hover{background:rgba(255,255,255,0.03)}
+.sx{padding:10px 14px 14px;background:var(--bg3);border-top:1px solid var(--border)}
+.ib{border-radius:4px;padding:9px 10px;flex:1}
+.lc{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
+.yn{display:flex;gap:8px;margin-top:12px}
+.ynb{flex:1;padding:11px;border-radius:4px;font-family:'Orbitron';font-size:9px;letter-spacing:2px;background:var(--bg3);border:1px solid var(--border);color:var(--text3);transition:all 0.15s}
+.cb{flex:1;padding:9px 0;border-radius:3px;font-family:'Orbitron';font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text3);transition:all 0.15s}
+.score-card{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:24px;text-align:center}
+.nc{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden}
+.nh{padding:14px;display:flex;gap:12px;align-items:center;cursor:pointer;transition:background 0.1s}
+.nh:hover{background:rgba(255,255,255,0.03)}
+.nb{padding:12px 14px 14px 46px;background:var(--bg3);border-top:1px solid var(--border)}
+.ep{background:var(--bg2);border-top:1px solid var(--border);padding:12px 18px 14px 50px}
+.el{font-family:'Orbitron';font-size:8px;color:var(--text3);letter-spacing:2px;margin-bottom:8px}
+.ir{display:flex;gap:8px;align-items:center;padding:3px 0;border-bottom:1px solid var(--border)}
+.ir:last-child{border-bottom:none}
+.dot{width:3px;height:3px;border-radius:50%;flex-shrink:0}
+.rb{margin-top:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:12px}
+.ri2{font-size:11px;color:var(--teal);font-style:italic;margin-bottom:10px;line-height:1.5}
+.rs{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.rs:last-child{border-bottom:none}
+.rn{font-family:'Orbitron';font-size:8px;color:var(--text3);flex-shrink:0;min-width:16px}
+.rt{font-size:12px;color:var(--text2);line-height:1.6}
+@keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(1000vh)}}
+#scanline{position:fixed;left:0;right:0;height:1px;background:linear-gradient(transparent,rgba(74,240,200,0.04),transparent);animation:scan 8s linear infinite;pointer-events:none;z-index:999}
+</style>
+</head>
+<body>
+<div id="scanline"></div>
+<div id="header">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div><div id="sys-label" class="orb">SYSTEM ACTIVE</div><div id="app-title">LOG</div></div>
+    <div style="text-align:right"><div id="pct-val" class="orb">0%</div><div id="pct-label">PROTOCOL</div></div>
+  </div>
+  <div id="prog-wrap"><div id="prog-bar"></div></div>
+  <div id="date-strip">
+    <span class="orb" id="date-text" style="font-size:9px;color:var(--text3);letter-spacing:1px"></span>
+    <span style="width:1px;height:8px;background:var(--border2)"></span>
+    <span id="train-badge"></span>
+    <button id="today-btn" onclick="goToday()" style="display:none;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;padding:2px 8px;font-family:'Orbitron';font-size:8px;color:var(--teal);letter-spacing:1px">TODAY</button>
+  </div>
+  <div id="macro-strip">
+    <div class="mc"><div class="mcl">CALORIES</div><div class="mcv" id="mc-cal" style="color:var(--gold)">-</div></div>
+    <div class="mc"><div class="mcl">PROTEIN</div><div class="mcv" id="mc-pro" style="color:var(--teal)">-</div></div>
+    <div class="mc"><div class="mcl">SESSION</div><div class="mcv" id="mc-sess" style="color:var(--purple);font-size:10px">-</div></div>
+  </div>
+</div>
+<div id="cal-wrap"><div id="cal-inner"></div></div>
+<div id="tabs">
+  <button class="tab active" data-tab="meals" onclick="switchTab('meals')"><div class="tab-icon">&#9672;</div><div class="tab-label">FOOD</div><div class="tab-badge" id="b-meals">-</div></button>
+  <button class="tab" data-tab="workout" onclick="switchTab('workout')"><div class="tab-icon">&#9679;</div><div class="tab-label">TRAIN</div><div class="tab-badge" id="b-workout">-</div></button>
+  <button class="tab" data-tab="stretch" onclick="switchTab('stretch')"><div class="tab-icon">&#9678;</div><div class="tab-label">MOBILITY</div><div class="tab-badge" id="b-stretch">-</div></button>
+  <button class="tab" data-tab="hair" onclick="switchTab('hair')"><div class="tab-icon">&#9671;</div><div class="tab-label">HAIR</div><div class="tab-badge" id="b-hair">-</div></button>
+  <button class="tab" data-tab="vitamins" onclick="switchTab('vitamins')"><div class="tab-icon">&#9670;</div><div class="tab-label">STACK</div><div class="tab-badge" id="b-vitamins">-</div></button>
+  <button class="tab" data-tab="notes" onclick="switchTab('notes')"><div class="tab-icon">&#9680;</div><div class="tab-label">NOTES</div><div class="tab-badge"></div></button>
+  <button class="tab" data-tab="life" onclick="switchTab('life')"><div class="tab-icon">&#9681;</div><div class="tab-label">LIFE</div><div class="tab-badge"></div></button>
+</div>
+<div id="content"></div>
+<script>
+var HEVY_KEY = "bbf67894-7e7f-40bf-b4bf-adf7492a58ac";
+var MONTHS=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+var DS=["SUN","MON","TUE","WED","THU","FRI","SAT"];
+var DF=["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
+var TL={0:"Muay Thai / Recovery",1:"Push",2:"Pull",3:"Legs A Quad",4:"Muay Thai",5:"Upper + Arms",6:"Legs B Posterior"};
+var TS={0:"5PM MUAY THAI",1:"GYM 4:30AM",2:"GYM 4:30AM",3:"GYM 4:30AM",4:"5PM MUAY THAI",5:"GYM 4:30AM",6:"GYM 4:30AM"};
+var TC={"PRE-WO":"#ff9040","POST-WO":"#b088ff","MEAL 1":"#7080ff","MEAL 2":"#30d898","MEAL 3":"#60b8ff","MEAL 4":"#f0d060","PRE-MT":"#ff5555","BLUE V":"#60b8ff"};
+function tc(t){return TC[t]||"#f0d060";}
 
+var MEALS={
+1:[
+  {tag:"PRE-WO",time:"4:10am",name:"Disorder + Banana",cal:115,pro:1,items:["Faction Labs Disorder 1 scoop","1 medium banana","300ml water"],recipe:{intro:"Eat banana first, mix Disorder after.",steps:["Peel and eat banana","Add 1 scoop Disorder to 300ml cold water in shaker","Shake 10 seconds","Drink on the way to gym"]}},
+  {tag:"POST-WO",time:"6:00am",name:"Steak & Egg Rice Bowl",cal:680,pro:60,items:["Grass Fed Rump Steak 200g","2 eggs","Rice 150g cooked","Soy sauce","Sesame oil","Broccoli"],recipe:{intro:"High protein post-workout. Cook rice night before.",steps:["Reheat pre-cooked rice 90 sec microwave","Season steak, cook high heat 2-3 min each side, rest 2 min, slice","Fry 2 eggs in same pan","Microwave broccoli 2-3 min","Bowl: rice, steak, eggs, broccoli","Drizzle soy sauce + sesame oil"]}},
+  {tag:"MEAL 2",time:"9:00am",name:"Smoothie",cal:606,pro:43,items:["EHP Zero IsoPept 1 scoop","A2 Full Cream Milk 300ml","Rolled Oats 60g","Raspberries 75g","Hersheys Choc Syrup 15g","Creatine 5g"],recipe:{intro:"Add to Nutribullet in this order.",steps:["Add milk first","Add oats","Add frozen raspberries","Add protein powder and creatine","Drizzle choc syrup","Blend 30-45 seconds","Drink immediately"]}},
+  {tag:"BLUE V",time:"10:00am",name:"Blue V",cal:110,pro:0,items:["Blue V 250ml"],recipe:{intro:"Open and drink.",steps:["Open can","Drink"]}},
+  {tag:"MEAL 3",time:"1:00pm",name:"Chicken Rice Bowl",cal:520,pro:50,items:["Whole Chicken Breast 200g","Jasmine Rice 200g cooked","Soy sauce","Sesame oil","Broccoli"],recipe:{intro:"Simple, clean, high protein.",steps:["Cook or reheat rice","Slice chicken, cook medium-high 4-5 min each side","Bowl: rice, chicken, broccoli","Season with soy sauce and sesame oil"]}},
+  {tag:"MEAL 4",time:"6:30pm",name:"Old El Paso Beef Tacos",cal:820,pro:52,items:["Beef Mince 250g","Old El Paso spice mix","4x hard shell + 2x soft taco","Cheese","Sour cream","Lettuce"],recipe:{intro:"Classic. Both hard and soft shells.",steps:["Brown mince 5-6 min, break up as it cooks","Add OEP spice mix + 1/4 cup water, simmer 3 min","Warm hard shells 30 sec microwave","Build: mince, cheese, lettuce, sour cream","Eat immediately"]}}
+],
+2:[
+  {tag:"PRE-WO",time:"4:10am",name:"Disorder + Banana",cal:115,pro:1,items:["Faction Labs Disorder 1 scoop","1 medium banana","300ml water"],recipe:{intro:"Quick pre-workout.",steps:["Eat banana","Mix Disorder in 300ml cold water, shake and drink"]}},
+  {tag:"POST-WO",time:"6:00am",name:"Bacon and Eggs",cal:620,pro:42,items:["Gillys Eye Bacon 125g","3 whole eggs","Sourdough toast x2"],recipe:{intro:"Classic. Fast.",steps:["Pan-fry bacon 2-3 min each side","Fry or scramble eggs in same pan","Toast sourdough","Plate up"]}},
+  {tag:"MEAL 2",time:"9:00am",name:"Smoothie",cal:606,pro:43,items:["EHP Zero IsoPept 1 scoop","A2 Full Cream Milk 300ml","Rolled Oats 60g","Raspberries 75g","Hersheys Choc Syrup 15g","Creatine 5g"],recipe:{intro:"Standard smoothie.",steps:["Milk, oats, raspberries, protein, creatine, syrup - blend 30 sec"]}},
+  {tag:"BLUE V",time:"10:00am",name:"Blue V",cal:110,pro:0,items:["Blue V 250ml"],recipe:{intro:"Open and drink.",steps:["Drink"]}},
+  {tag:"MEAL 3",time:"1:00pm",name:"Diced Rump Stir-Fry",cal:620,pro:55,items:["Diced Grass Fed Rump 250g","Rice noodles 150g dry","Mixed veg","Soy sauce","Oyster sauce"],recipe:{intro:"High heat, fast cook.",steps:["Soak noodles in boiling water 5 min, drain","Heat wok on high with oil","Cook rump 3-4 min tossing regularly","Add veg 2 min, add noodles","Pour 2 tbsp soy + 1 tbsp oyster sauce, toss and serve"]}},
+  {tag:"MEAL 4",time:"6:30pm",name:"Stir-Fry Chicken + Rice",cal:690,pro:65,items:["Stir-Fry Chicken Breast 500g","Rice 180g cooked","Sweet chilli sauce","Sesame oil"],recipe:{intro:"Full pack - big meal for pull day.",steps:["Cook rice: 90g dry + 180ml water, simmer 12 min","Cook chicken strips high heat 5-6 min until golden","Add rice, toss 1 min","Drizzle sweet chilli + sesame oil, serve"]}}
+],
+3:[
+  {tag:"PRE-WO",time:"4:10am",name:"Disorder + Banana",cal:115,pro:1,items:["Faction Labs Disorder 1 scoop","1 medium banana","300ml water"],recipe:{intro:"Standard.",steps:["Eat banana, mix Disorder in 300ml water, drink"]}},
+  {tag:"POST-WO",time:"6:00am",name:"Steak and Egg Rice Bowl",cal:660,pro:58,items:["Grass Fed Rump Steak 200g","2 eggs","Rice 150g cooked","Soy sauce","Sesame oil"],recipe:{intro:"Legs day fuel.",steps:["Reheat rice 90 sec","Sear steak high heat 2-3 min per side, rest, slice","Fry 2 eggs","Bowl: rice, steak, eggs, soy + sesame oil"]}},
+  {tag:"MEAL 2",time:"9:00am",name:"Smoothie",cal:606,pro:43,items:["EHP Zero IsoPept 1 scoop","A2 Full Cream Milk 300ml","Rolled Oats 60g","Raspberries 75g","Hersheys Choc Syrup 15g","Creatine 5g"],recipe:{intro:"Standard smoothie.",steps:["Milk, oats, raspberries, protein, creatine, syrup - blend 30 sec"]}},
+  {tag:"BLUE V",time:"10:00am",name:"Blue V",cal:110,pro:0,items:["Blue V 250ml"],recipe:{intro:"Open and drink.",steps:["Drink"]}},
+  {tag:"MEAL 3",time:"1:00pm",name:"Beef Mince Wraps",cal:780,pro:52,items:["Beef Mince 250g","3x Mission wraps","Cheese","Hot sauce","Lettuce"],recipe:{intro:"Dead simple.",steps:["Brown mince 5-6 min, season with salt, pepper, garlic powder","Warm wraps 20 sec microwave","Layer: mince, cheese, lettuce, hot sauce","Roll and eat"]}},
+  {tag:"MEAL 4",time:"6:30pm",name:"Chicken + Roast Potato",cal:620,pro:52,items:["Whole Chicken Breast 200g","Roast potatoes 300g","Garlic butter","Broccolini"],recipe:{intro:"Oven does the work.",steps:["Preheat oven 200C","Dice potatoes, toss in olive oil, salt, garlic powder, roast 25-30 min","Pan-fry chicken 4-5 min per side","Blanch broccolini 2 min","Plate with garlic butter"]}}
+],
+4:[
+  {tag:"MEAL 1",time:"8:00am",name:"Smoothie",cal:606,pro:43,items:["EHP Zero IsoPept 1 scoop","A2 Full Cream Milk 300ml","Rolled Oats 60g","Raspberries 75g","Hersheys Choc Syrup 15g","Creatine 5g"],recipe:{intro:"First meal, Muay Thai day.",steps:["Milk, oats, raspberries, protein, creatine, syrup - blend 30-45 sec"]}},
+  {tag:"BLUE V",time:"10:00am",name:"Blue V",cal:110,pro:0,items:["Blue V 250ml"],recipe:{intro:"10am.",steps:["Drink"]}},
+  {tag:"MEAL 2",time:"12:00pm",name:"Lean Mince + Rice",cal:540,pro:50,items:["Extra Lean Mince 95% 250g","Rice 180g cooked","Hot sauce","Herbs"],recipe:{intro:"Clean fuel.",steps:["Cook rice 90g dry + 180ml water, simmer 12 min","Brown mince 5-6 min, season","Combine in bowl, hot sauce to taste"]}},
+  {tag:"MEAL 3",time:"3:00pm",name:"Diced Chicken Quesadilla",cal:620,pro:52,items:["Diced Chicken Breast 250g","2 large tortillas","Cheese","Jalapenos"],recipe:{intro:"2 hours before training.",steps:["Pan-fry diced chicken medium-high 5-6 min","Lay tortilla flat in pan on medium","Chicken, cheese, jalapenos on one half","Fold over, press down, cook 2 min each side","Slice into wedges"]}},
+  {tag:"PRE-MT",time:"4:15pm",name:"Half Disorder",cal:8,pro:0,items:["Half scoop Faction Labs Disorder","300ml water"],recipe:{intro:"Pre Muay Thai. Half dose.",steps:["Half scoop in 300ml cold water, shake","Drink 15-20 min before training"]}},
+  {tag:"MEAL 4",time:"7:30pm",name:"KFC or GYG Post-Training",cal:1050,pro:62,items:["Week 1: KFC - 3pc Original + Large Chips + Coleslaw + Potato and Gravy","Week 2: GYG - Double Chicken Burrito Bowl"],recipe:{intro:"Post-training. Earned.",steps:["Week 1 KFC: 3pc Original, large chips, coleslaw, potato and gravy","Week 2 GYG: Double chicken burrito bowl - rice, beans, corn, sour cream, cheese","Eat within 30-60 min of finishing training"]}}
+],
+5:[
+  {tag:"PRE-WO",time:"4:10am",name:"Disorder + Banana",cal:115,pro:1,items:["Faction Labs Disorder 1 scoop","1 medium banana","300ml water"],recipe:{intro:"Standard.",steps:["Eat banana, mix Disorder in 300ml water, drink"]}},
+  {tag:"POST-WO",time:"6:00am",name:"Bacon Fried Rice",cal:670,pro:44,items:["Gillys Eye Bacon 125g","Rice 200g cooked","3 eggs","Soy sauce","Spring onion"],recipe:{intro:"Best with day-old rice.",steps:["Dice bacon, fry 3 min until starting to crisp","Push bacon to side, crack eggs in, scramble","Add cold rice, break up clumps","Toss everything on high heat 2 min","Add soy sauce, garnish with spring onion"]}},
+  {tag:"MEAL 2",time:"9:00am",name:"Smoothie",cal:606,pro:43,items:["EHP Zero IsoPept 1 scoop","A2 Full Cream Milk 300ml","Rolled Oats 60g","Raspberries 75g","Hersheys Choc Syrup 15g","Creatine 5g"],recipe:{intro:"Standard smoothie.",steps:["Milk, oats, raspberries, protein, creatine, syrup - blend 30 sec"]}},
+  {tag:"BLUE V",time:"10:00am",name:"Blue V",cal:110,pro:0,items:["Blue V 250ml"],recipe:{intro:"Open and drink.",steps:["Drink"]}},
+  {tag:"MEAL 3",time:"1:00pm",name:"Diced Rump Bowl",cal:620,pro:52,items:["Diced Grass Fed Rump 250g","Rice 200g cooked","Asian greens","Oyster sauce"],recipe:{intro:"Clean and fast.",steps:["Reheat rice","Sear diced rump hot pan 3-4 min","Wilt greens 1 min","Bowl: rice, rump, greens - oyster sauce over top"]}},
+  {tag:"MEAL 4",time:"6:30pm",name:"Old El Paso Beef Enchiladas",cal:860,pro:54,items:["Beef Mince 250g","Old El Paso enchilada sauce","4x flour tortillas","Cheese","Sour cream"],recipe:{intro:"Takes 25 min. Worth it.",steps:["Preheat oven 180C","Brown mince 5-6 min","Add half enchilada sauce to mince","Spoon mince down centre of each tortilla, roll tightly, seam-down in baking dish","Remaining sauce over top, cover with cheese","Bake 15 min until golden","Serve with sour cream"]}}
+],
+6:[
+  {tag:"PRE-WO",time:"4:10am",name:"Disorder + Banana",cal:115,pro:1,items:["Faction Labs Disorder 1 scoop","1 medium banana","300ml water"],recipe:{intro:"Standard.",steps:["Eat banana, mix Disorder in 300ml water, drink"]}},
+  {tag:"POST-WO",time:"6:00am",name:"Steak and Egg Rice Bowl",cal:660,pro:58,items:["Grass Fed Rump Steak 200g","2 eggs","Rice 150g cooked","Soy sauce","Sesame oil"],recipe:{intro:"Post legs fuel.",steps:["Reheat rice 90 sec","Sear steak high heat 2-3 min per side, rest, slice","Fry 2 eggs","Bowl: rice, steak, eggs, soy + sesame oil"]}},
+  {tag:"MEAL 2",time:"9:00am",name:"Smoothie",cal:606,pro:43,items:["EHP Zero IsoPept 1 scoop","A2 Full Cream Milk 300ml","Rolled Oats 60g","Raspberries 75g","Hersheys Choc Syrup 15g","Creatine 5g"],recipe:{intro:"Standard smoothie.",steps:["Milk, oats, raspberries, protein, creatine, syrup - blend 30 sec"]}},
+  {tag:"BLUE V",time:"10:00am",name:"Blue V",cal:110,pro:0,items:["Blue V 250ml"],recipe:{intro:"Open and drink.",steps:["Drink"]}},
+  {tag:"MEAL 3",time:"1:00pm",name:"Lean Mince Pasta",cal:720,pro:55,items:["Extra Lean Mince 95% 250g","Pasta 180g dry","Napoli sauce","Parmesan"],recipe:{intro:"Simple pasta.",steps:["Boil salted water, cook pasta al dente","Brown mince 5-6 min","Add napoli sauce, simmer 3 min","Drain pasta, add to sauce, toss","Serve with parmesan"]}},
+  {tag:"MEAL 4",time:"6:30pm",name:"Chicken Breast + Pasta",cal:680,pro:55,items:["Whole Chicken Breast 200g","Pasta 180g dry","Napoli sauce","Parmesan","Spinach"],recipe:{intro:"Optional: swap for KFC or GYG.",steps:["Cook pasta al dente, drain","Pan-fry chicken 4-5 min each side, rest 2 min, slice","Heat napoli sauce, add spinach, wilt 1 min","Add pasta, toss","Chicken on top, parmesan over everything"]}}
+],
+0:[
+  {tag:"MEAL 1",time:"8:00am",name:"Smoothie",cal:606,pro:43,items:["EHP Zero IsoPept 1 scoop","A2 Full Cream Milk 300ml","Rolled Oats 60g","Raspberries 75g","Hersheys Choc Syrup 15g","Creatine 5g"],recipe:{intro:"Sunday. Start right.",steps:["Milk, oats, raspberries, protein, creatine, syrup - blend 30 sec"]}},
+  {tag:"BLUE V",time:"10:00am",name:"Blue V",cal:110,pro:0,items:["Blue V 250ml"],recipe:{intro:"Open and drink.",steps:["Drink"]}},
+  {tag:"MEAL 2",time:"12:00pm",name:"Bacon and Eggs",cal:620,pro:42,items:["Gillys Eye Bacon 125g","3 eggs","Sourdough toast x2"],recipe:{intro:"Sunday fuel before training.",steps:["Pan-fry bacon 2-3 min each side","Fry or scramble eggs","Toast sourdough","Plate up"]}},
+  {tag:"MEAL 3",time:"3:00pm",name:"Beef Mince Wraps",cal:760,pro:52,items:["Beef Mince 250g","3 wraps","Cheese","Hot sauce","Lettuce"],recipe:{intro:"2 hours before Muay Thai.",steps:["Brown mince 5-6 min, season","Warm wraps 20 sec","Build: mince, cheese, lettuce, hot sauce, roll and eat"]}},
+  {tag:"PRE-MT",time:"4:15pm",name:"Half Disorder",cal:8,pro:0,items:["Half scoop Faction Labs Disorder","300ml water"],recipe:{intro:"Pre Muay Thai. Half dose.",steps:["Half scoop in 300ml cold water, shake, drink 15-20 min before"]}},
+  {tag:"MEAL 4",time:"7:30pm",name:"Old El Paso Chicken Tacos",cal:780,pro:55,items:["Diced Chicken Breast 250g","Old El Paso spice mix","4x hard shell + 2x soft taco","Cheese","Sour cream","Lettuce"],recipe:{intro:"Or swap for KFC or GYG. Post-training Sunday.",steps:["Season chicken with OEP spice mix","Pan-fry 5-6 min until cooked","Warm shells 30 sec","Build: chicken, cheese, lettuce, sour cream"]}}
+]
+};
+
+// STRETCHES - gym days are workout specific, MMA days are MMA specific
+// stretchType: "warmup" or "cooldown"
+// on MMA days use MMA data, on gym days use gym-specific data
+var GYM_STRETCH={
+1:{label:"Push",
+warmup:[
+  {name:"Arm Circles",dur:"30s each direction",steps:["Stand tall, arms out to sides","Large circles forward 30s","Reverse 30s"],breath:"Breathe normally",mistake:"Don't tense your neck or shrug"},
+  {name:"Chest Opener Reach",dur:"10 reps",steps:["Hands clasped behind back","Gently pull hands away from body and lift chest","Hold 2 seconds, release and repeat"],breath:"Inhale as you open, exhale as you release",mistake:"Gentle traction only - don't yank"},
+  {name:"Cross-Body Shoulder Swings",dur:"20 reps",steps:["Swing both arms across chest","Let them wrap around torso","Open wide on back swing, increase range each rep"],breath:"Exhale as arms cross, inhale as they open",mistake:"Controlled swings - don't rush"},
+  {name:"Wrist Rotations",dur:"30s each direction",steps:["Arms forward, rotate wrists outward 30s","Reverse 30s","Then flex and extend fingers 10 times"],breath:"Breathe normally",mistake:"Don't skip this on press days"}
+],
+cooldown:[
+  {name:"Doorway Chest Stretch",dur:"45s each side",steps:["Arm at 90 degrees on doorframe","Step forward until stretch felt across chest","Higher arm = upper pec, lower = lower pec"],breath:"Long slow exhale to deepen",mistake:"Don't twist torso - keep hips and shoulders square"},
+  {name:"Cross-Body Shoulder Stretch",dur:"45s each side",steps:["Pull arm across chest with opposite hand","Grip just above the elbow","Arm parallel to floor","Turn head away slightly"],breath:"Slow exhale as you pull",mistake:"Don't shrug the shoulder being stretched"},
+  {name:"Overhead Tricep Stretch",dur:"45s each side",steps:["Raise arm overhead, bend elbow","Hand drops behind head","Opposite hand gently presses elbow back"],breath:"Exhale and gently increase pressure",mistake:"Don't let head jut forward"},
+  {name:"Pec Minor Stretch",dur:"60s",steps:["Hands clasped behind lower back","Gently straighten elbows, draw shoulders back","Lift chest, look slightly upward"],breath:"Full inhale to expand chest, slow exhale to sink deeper",mistake:"Don't arch lower back - stay tall"},
+  {name:"Wrist Flexor and Extensor",dur:"30s each",steps:["Flexor: arm forward palm up, bend wrist down with other hand. 30s each side","Extensor: arm forward palm down, bend wrist toward you. 30s each side"],breath:"Steady breathing",mistake:"Reduce if you feel sharp elbow pain"}
+]},
+2:{label:"Pull",
+warmup:[
+  {name:"Neck Rolls",dur:"30s each direction",steps:["Drop chin to chest","Slowly roll head to right shoulder","Continue around full circle","Reverse after 30s"],breath:"Breathe normally",mistake:"Gentle only - no aggressive back rolls"},
+  {name:"Thoracic Rotation",dur:"10 reps each side",steps:["Sit, arms crossed over chest","Rotate torso right as far as comfortable, hold 1-2 sec","Return to centre, rotate left","Keep hips stable"],breath:"Exhale as you rotate, inhale returning",mistake:"Upper back only - not the hips"},
+  {name:"Band Pull-Apart Simulation",dur:"15 reps",steps:["Arms extended forward at shoulder height","Pull arms apart squeezing shoulder blades","Hold 1 second at end range, return slowly"],breath:"Exhale as you pull apart",mistake:"Shoulders stay down - don't shrug"},
+  {name:"Scapular Circles",dur:"10 reps each direction",steps:["Arms at sides, shrug shoulders up","Roll them back and down, then forward and up","Make circles as big as possible","Reverse after 10 reps"],breath:"Breathe naturally",mistake:"Don't rush - full range of motion"}
+],
+cooldown:[
+  {name:"Lat Hang",dur:"45-60s",steps:["Dead hang from pull-up bar","Let body go fully passive","Shoulders rise toward ears - this is correct","Feet can lightly touch floor if needed"],breath:"Full slow exhales - feel spine lengthen",mistake:"Don't engage lats - pure passive hang"},
+  {name:"Childs Pose",dur:"60s",steps:["Kneel, sit back toward heels","Arms extended forward on floor","Let chest sink toward ground","Walk hands further for more lat stretch"],breath:"Inhale through nose, long exhale through mouth",mistake:"Don't hold tension in arms - hands just rest"},
+  {name:"Bicep Wall Stretch",dur:"45s each side",steps:["Stand facing wall, hand flat at shoulder height, fingers pointing behind you","Slowly rotate body away from wall","Feel stretch along bicep and forearm"],breath:"Slow exhale as you rotate away",mistake:"Slight elbow bend is fine - don't lock out"},
+  {name:"Thoracic Foam Roll",dur:"60s",steps:["Roller under mid-back perpendicular to spine","Hands behind head supporting neck","Let upper back arch over roller","Slowly move up and down, pause on tight spots"],breath:"Full inhale over roller, exhale to relax deeper",mistake:"Thoracic spine only - not lower back or neck"}
+]},
+3:{label:"Legs A Quad",
+warmup:[
+  {name:"Leg Swings Forward Back",dur:"15 reps each leg",steps:["Hold wall for balance","Swing leg forward and back like a pendulum","Gradually increase range each swing"],breath:"Breathe naturally",mistake:"Don't force range - let momentum build"},
+  {name:"Leg Swings Side to Side",dur:"15 reps each leg",steps:["Face wall, hands on wall","Swing leg side to side across body","Increase range gradually, switch legs"],breath:"Breathe normally",mistake:"Keep hips stable - don't rotate"},
+  {name:"Hip Circles",dur:"10 reps each direction",steps:["Hands on hips","Draw large circles clockwise 10 reps","Reverse 10 reps"],breath:"Breathe naturally",mistake:"Keep upper body still - isolate the hip"},
+  {name:"Bodyweight Squat Controlled",dur:"10 slow reps",steps:["Feet shoulder-width, toes slightly out","Lower slowly over 3 seconds","Hold bottom 1 second, drive through heels to stand","Use elbows to push knees out at bottom"],breath:"Inhale down, exhale up",mistake:"Don't let knees cave inward"}
+],
+cooldown:[
+  {name:"Standing Quad Stretch",dur:"60s each side",steps:["Stand on one leg, pull opposite heel to glute","Keep knees together, stay tall","Tilt pelvis forward to increase stretch"],breath:"Long exhale to increase pull",mistake:"Don't lean forward - knees together is key"},
+  {name:"Hip Flexor Lunge Stretch",dur:"60s each side",steps:["Step forward into lunge, back knee to floor","Shift weight forward, feel stretch in front of back hip","Keep torso tall, tuck pelvis slightly"],breath:"4 count inhale, long exhale to sink forward",mistake:"Don't let front knee collapse inward"},
+  {name:"Pigeon Pose",dur:"90s each side",steps:["Bring shin forward roughly parallel to mat","Extend other leg straight back","Lower hips - towel under front hip if needed","Walk hands forward and lower chest"],breath:"4 count inhale, 6 count exhale - main recovery stretch",mistake:"No sharp knee pain - back off immediately if felt"},
+  {name:"IT Band Cross-Leg Stretch",dur:"45s each side",steps:["Stand tall, cross right foot behind left","Lean torso to left, push right hip out","Feel stretch along outer right thigh","Use wall for balance, switch sides"],breath:"Exhale as you lean to increase stretch",mistake:"Lean sideways - not forward"}
+]},
+5:{label:"Upper + Arms",
+warmup:[
+  {name:"Arm Circles Progressive",dur:"30s each direction",steps:["Small circles building to large over 15 seconds","Forward 30s then reverse 30s","Then alternate: one arm forward, one back"],breath:"Breathe normally",mistake:"Don't tense your traps - let arms swing freely"},
+  {name:"Band Pull-Apart Simulation",dur:"15 reps",steps:["Arms extended forward at shoulder height","Pull arms apart, squeeze shoulder blades hard at end","Return slowly and controlled"],breath:"Exhale as you pull apart",mistake:"Shoulders stay down throughout"},
+  {name:"Elbow Circles",dur:"15 reps each direction",steps:["Fingertips on shoulders","Draw large circles with elbows forward 15 reps","Backward 15 reps"],breath:"Breathe normally",mistake:"Don't let chest collapse forward as you circle back"},
+  {name:"Cat-Cow",dur:"10 slow reps",steps:["On hands and knees","Exhale: arch back up, tuck chin (cat)","Inhale: let belly drop, lift chest and tailbone (cow)","Move slowly, link to breath"],breath:"Exhale into cat, inhale into cow",mistake:"Don't rush - each rep 4-5 seconds"}
+],
+cooldown:[
+  {name:"Doorway Chest Stretch",dur:"45s each side",steps:["Arm at 90 degrees on doorframe","Step through, chest tall","Higher arm = upper pec, lower = lower pec"],breath:"Long exhale to let chest open",mistake:"Don't lean whole body forward"},
+  {name:"Lat Hang",dur:"60s",steps:["Dead hang from pull-up bar","Fully passive - shoulders rise toward ears","Breathe and decompress"],breath:"Full slow exhales - feel spine lengthen",mistake:"Don't engage your lats - pure passive hang"},
+  {name:"Overhead Tricep Stretch",dur:"45s each side",steps:["Raise arm overhead, bend elbow","Hand drops behind head","Opposite hand gently presses elbow back"],breath:"Gentle exhale pressure each breath",mistake:"Don't let head jut forward"},
+  {name:"Wrist Flexor and Extensor",dur:"30s each",steps:["Flexor: arm forward palm up, bend wrist down. 30s each side","Extensor: arm forward palm down, bend wrist toward you. 30s each side"],breath:"Steady breathing",mistake:"Reduce intensity if sharp elbow pain"},
+  {name:"Thoracic Foam Roll",dur:"60-90s",steps:["Roller under mid-back perpendicular to spine","Hands behind head, let upper back arch over roller","Roll slowly from mid to upper back, pause on tight spots"],breath:"Full inhale over roller, exhale to relax",mistake:"Thoracic spine only - not lower back or neck"}
+]},
+6:{label:"Legs B Posterior",
+warmup:[
+  {name:"Leg Swings Forward Back",dur:"15 reps each leg",steps:["Hold wall for balance","Swing leg forward and back, gradually increase range"],breath:"Breathe naturally",mistake:"Don't force range - let momentum build"},
+  {name:"Glute Bridge Activation",dur:"15 slow reps",steps:["Lie on back, knees bent, feet flat","Push through heels to raise hips","Squeeze glutes hard at top, hold 2 seconds","Lower slowly"],breath:"Exhale as you drive up, inhale lowering",mistake:"Drive through heels and glutes - not lower back"},
+  {name:"Bodyweight Romanian DL",dur:"10 slow reps",steps:["Stand tall, feet hip-width","Hinge at hips, back flat, slight knee bend","Lower hands toward floor, feel hamstrings","Drive hips forward to stand, squeeze glutes"],breath:"Exhale hinging down, inhale returning",mistake:"Don't round your lower back - reduce range if you do"},
+  {name:"Hip Circles",dur:"10 each direction",steps:["Hands on hips, draw large circles clockwise 10 reps","Reverse 10 reps"],breath:"Breathe naturally",mistake:"Keep upper body still"}
+],
+cooldown:[
+  {name:"Standing Hamstring Stretch",dur:"60s each side",steps:["Place one heel on bench or elevated surface","Keep leg straight, toes up","Hinge forward from hips - don't round back","Reach toward foot"],breath:"Exhale to hinge further forward",mistake:"Don't round your spine - stretch is in hamstring not back"},
+  {name:"Pigeon Pose",dur:"90s each side",steps:["Shin forward, back leg extended","Lower hips - towel under front hip if needed","Walk hands forward, lower chest"],breath:"4 count inhale, 6 count exhale",mistake:"No sharp knee pain ever - back off immediately"},
+  {name:"Supine Hamstring Stretch",dur:"60s each side",steps:["Lie on back, raise one leg straight up","Hold behind thigh or calf - not the knee","Pull leg toward you, flex foot","Keep other leg flat"],breath:"Exhale to pull leg closer",mistake:"Don't let non-stretching leg lift off floor"},
+  {name:"Seated Piriformis Stretch",dur:"60s each side",steps:["Cross ankle over opposite knee (figure-4)","Flex foot to protect knee","Sit tall and lean slightly forward"],breath:"Exhale and lean forward to deepen",mistake:"Sit tall - slumping removes the stretch"},
+  {name:"Calf Wall Stretch",dur:"45s each side",steps:["Face wall, step one foot back, heel flat","Front knee bends, back leg straight, lean in","Bend back knee slightly for soleus"],breath:"Long exhale to relax into stretch",mistake:"Heel must stay flat - lifting it removes the stretch"}
+]}
+};
+
+var MMA_STRETCH={
+warmup:[
+  {name:"Jump Rope Shadow Skip",dur:"2 min",steps:["Stay on balls of feet - light quick bounces","Alternate two-foot bounce and running in place","Gradually increase pace over 2 min"],breath:"Breathe through nose if possible",mistake:"Don't tense shoulders - keep them relaxed and low"},
+  {name:"Hip Circle + High Knees",dur:"30s each movement",steps:["Hip circles: large circles each direction 30s","High knee march: drive knees up alternating, arms pumping","High knee run: same but faster 30s","Heel kicks: kick heels to glutes alternating"],breath:"Breathe naturally and rhythmically",mistake:"Quality over speed"},
+  {name:"Shoulder Roll + Punch Out",dur:"20 reps",steps:["Roll shoulders back 10 times","Alternate: extend one arm forward into slow punch","Rotate through torso, other hand at chin guard","Gradually add speed"],breath:"Sharp exhale with each punch - train the breathing pattern",mistake:"Rotation from hips and core - not just the arm"},
+  {name:"Lateral Lunge + Hip Opener",dur:"8 reps each side",steps:["Stand feet wide, shift weight to one side bending that knee","Keep other leg straight, sink low","Push bent knee out with elbow, hold 2 seconds"],breath:"Exhale as you sink into lunge",mistake:"Don't let bent knee cave inward"},
+  {name:"Neck Rolls",dur:"30s each direction",steps:["Drop chin to chest, slowly roll to right shoulder","Continue around full circle, reverse after 30s"],breath:"Breathe normally",mistake:"Gentle only - no aggressive rolls"}
+],
+cooldown:[
+  {name:"Hip Flexor Lunge Stretch",dur:"60s each side",steps:["Rear knee on floor, front foot flat","Shift weight forward, torso tall","Tuck pelvis slightly for more depth"],breath:"4 count inhale, 6 count exhale - sink deeper on each exhale",mistake:"Don't arch lower back - stretch is in front of hip"},
+  {name:"Butterfly Groin Stretch",dur:"90s",steps:["Sit on floor, soles of feet together","Sit tall - do not round back","Gently press knees toward floor with elbows"],breath:"Each exhale, let knees drop a little further",mistake:"Light pressure only - let gravity work"},
+  {name:"Standing Quad Stretch",dur:"45s each side",steps:["Balance on one leg, pull opposite heel to glute","Keep knees together, stay upright"],breath:"Slow exhale to increase pull",mistake:"Knees drifting apart reduces the stretch"},
+  {name:"Spinal Twist Supine",dur:"45s each side",steps:["Lie on back, draw one knee to chest","Cross knee over body toward floor on opposite side","Opposite arm extended, look away","Keep both shoulders flat on floor"],breath:"Inhale to lengthen spine, exhale to let knee drop further",mistake:"Don't force shoulder off floor"},
+  {name:"Pigeon Pose",dur:"60s each side",steps:["Shin forward roughly parallel to mat","Extend other leg straight back","Lower hips - towel under front hip if needed","Walk hands forward"],breath:"4 count inhale, 6 count exhale",mistake:"No sharp knee pain - back off immediately"},
+  {name:"Neck Side Stretch",dur:"30s each side",steps:["Drop right ear toward right shoulder","Place right hand gently on top of head - no pulling","Switch sides"],breath:"Long exhale deepens stretch gently",mistake:"Don't pull head down - the weight of your hand is enough"},
+  {name:"Box Breathing",dur:"3 min",steps:["Lie on back, eyes closed","Inhale through nose 4 counts","Hold 4 counts","Exhale through mouth 4 counts","Hold empty 4 counts","Repeat 8-10 cycles"],breath:"This IS the exercise - nervous system downregulation",mistake:"Reduce to 3 counts if 4 feels stressful"}
+]
+};
+
+// GYM PRE/POST - universal gym stretches available every gym day
+var GYM_PRE=[
+  {name:"Hip Flexor Lunge Hold",dur:"30s each side",steps:["Step into deep lunge, back knee to floor","Shift weight forward until stretch felt in front of back hip","Keep torso tall, no bouncing"],breath:"Slow exhale to sink deeper",mistake:"Don't arch lower back - tuck pelvis slightly"},
+  {name:"Worlds Greatest Stretch",dur:"5 reps each side",steps:["Deep lunge, same-side hand on floor inside front foot","Rotate opposite arm up to ceiling, eyes follow it","Hold 2 seconds, return hand to floor, switch sides"],breath:"Inhale to brace, exhale as you rotate upward",mistake:"Don't rush - full range on each rep"},
+  {name:"Thoracic Rotation",dur:"8 reps each side",steps:["Sit, arms crossed over chest","Rotate torso right as far as comfortable, hold 1-2 sec","Return to centre, rotate left, hips stable"],breath:"Exhale as you rotate, inhale returning",mistake:"Upper back only - not the hips"},
+  {name:"Ankle Circles + Calf Raise",dur:"10 reps each",steps:["Stand on one foot, rotate ankle 10 circles each direction","Rise onto toes 10 slow reps, lower heel fully each rep","Switch feet"],breath:"Breathe normally",mistake:"Don't let knee cave inward on calf raises"},
+  {name:"Arm and Tricep Stretch",dur:"20s each position each arm",steps:["Pull arm across chest - hold 20s","Raise same arm overhead, bend at elbow, press back - hold 20s","Switch arms"],breath:"Long exhale on each hold",mistake:"Don't shrug the shoulder being stretched"}
+];
+var GYM_POST=[
+  {name:"Standing Quad Stretch",dur:"60s each side",steps:["Stand on one leg, pull opposite heel to glute","Keep knees together, stay tall","Tilt pelvis forward to intensify"],breath:"Long exhale to increase pull",mistake:"Don't lean forward - knees together is key"},
+  {name:"Doorway Chest Stretch",dur:"45s each side",steps:["Arm at 90 degrees on doorframe","Step forward until stretch felt across chest","Higher arm = upper pec, lower = lower pec"],breath:"Long slow exhale to open chest",mistake:"Don't twist torso"},
+  {name:"Lat Hang",dur:"45-60s",steps:["Dead hang from pull-up bar - fully passive","Shoulders rise toward ears - correct","Feel spine decompress"],breath:"Full slow exhales - feel rib cage drop",mistake:"Don't engage lats - pure passive hang"},
+  {name:"Seated Piriformis Stretch",dur:"60s each side",steps:["Cross ankle over opposite knee (figure-4)","Flex foot to protect knee","Sit tall, lean slightly forward from hips"],breath:"Exhale and lean forward slightly to deepen",mistake:"Sit tall - slumping removes the stretch"},
+  {name:"Childs Pose",dur:"60s",steps:["Kneel, sit back toward heels","Arms extended forward on floor","Let chest sink toward ground"],breath:"4 count inhale feel back expand. 6 count exhale melt into floor",mistake:"Place pillow under hips if they don't reach heels"},
+  {name:"Calf Wall Stretch",dur:"45s each side",steps:["Face wall, step one foot back heel flat","Front knee bends, back leg straight, lean in","Bend back knee slightly for soleus"],breath:"Long exhale to relax into stretch",mistake:"Heel must stay flat on floor"}
+];
+
+var HAIR={
+0:{label:"Full Wash + Night Rinse",products:["Hair ResQ","Dermal Shampoo","Dermal Conditioner","Dermal Serum","Regaine 5%"],steps:["Wet hair thoroughly","Apply Hair ResQ Biotin Shampoo - massage 2 min, rinse","Apply Dermal Therapy Shampoo - massage 2 min, rinse","Apply Dermal Therapy Conditioner - leave 3 min, rinse","Towel dry - pat only, do NOT rub","Apply Dermal Therapy Hair Restoring Serum to scalp","Apply Regaine 5% Minoxidil Foam - 1g to dry scalp, do not wash out"],nightSteps:["Rinse post-training sweat - no shampoo needed","Pat dry scalp thoroughly","Reapply Dermal Therapy Hair Restoring Serum"]},
+1:{label:"Daily Maintenance",products:["Dermal Serum","Regaine 5%"],steps:["Apply Dermal Therapy Hair Restoring Serum to scalp post-shower","Apply Regaine 5% Minoxidil Foam - 1g to dry scalp, do not wash out"]},
+2:{label:"Nizoral Day",products:["Nizoral","Dermal Conditioner","Dermal Serum","Regaine 5%"],steps:["Wet hair thoroughly","Apply Nizoral 1% Ketoconazole - massage 3-5 min, leave on scalp, rinse","Apply Dermal Therapy Conditioner - leave 3 min, rinse","Towel dry - pat only","Apply Dermal Therapy Hair Restoring Serum to scalp","Apply Regaine 5% Minoxidil Foam - 1g to dry scalp, do not wash out"]},
+3:{label:"Daily Maintenance",products:["Dermal Serum","Regaine 5%"],steps:["Apply Dermal Therapy Hair Restoring Serum to scalp post-shower","Apply Regaine 5% Minoxidil Foam - 1g to dry scalp, do not wash out"]},
+4:{label:"Full Wash + Night Rinse",products:["Hair ResQ","Dermal Shampoo","Dermal Conditioner","Dermal Serum","Regaine 5%"],steps:["Wet hair thoroughly","Apply Hair ResQ Biotin Shampoo - massage 2 min, rinse","Apply Dermal Therapy Shampoo - massage 2 min, rinse","Apply Dermal Therapy Conditioner - leave 3 min, rinse","Towel dry - pat only, do NOT rub","Apply Dermal Therapy Hair Restoring Serum to scalp","Apply Regaine 5% Minoxidil Foam - 1g to dry scalp, do not wash out"],nightSteps:["Rinse post-training sweat - no shampoo needed","Pat dry scalp thoroughly","Reapply Dermal Therapy Hair Restoring Serum"]},
+5:{label:"Nizoral Day",products:["Nizoral","Dermal Conditioner","Dermal Serum","Regaine 5%"],steps:["Wet hair thoroughly","Apply Nizoral 1% Ketoconazole - massage 3-5 min, leave on scalp, rinse","Apply Dermal Therapy Conditioner - leave 3 min, rinse","Towel dry - pat only","Apply Dermal Therapy Hair Restoring Serum to scalp","Apply Regaine 5% Minoxidil Foam - 1g to dry scalp, do not wash out"]},
+6:{label:"Full Wash",products:["Hair ResQ","Dermal Shampoo","Dermal Conditioner","Dermal Serum","Regaine 5%"],steps:["Wet hair thoroughly","Apply Hair ResQ Biotin Shampoo - massage 2 min, rinse","Apply Dermal Therapy Shampoo - massage 2 min, rinse","Apply Dermal Therapy Conditioner - leave 3 min, rinse","Towel dry - pat only, do NOT rub","Apply Dermal Therapy Hair Restoring Serum to scalp","Apply Regaine 5% Minoxidil Foam - 1g to dry scalp, do not wash out"]}
+};
+
+var WORKOUT={
+1:{label:"Push",exercises:[{n:"Bench Press",s:"4x6-8",note:"Control the descent - 2 sec down. Don't bounce off chest."},{n:"Incline DB Press",s:"3x10-12",note:"Keep elbows at 45 degrees - not flared wide."},{n:"Overhead Press",s:"3x10-12",note:"Brace core hard. Don't arch lower back."},{n:"Cable Lateral Raise",s:"3x12-15",note:"Lean slightly forward, slight elbow bend throughout."},{n:"Tricep Pushdown",s:"3x12-15",note:"Keep elbows pinned to sides throughout."},{n:"DB Lateral Raise",s:"3x15",note:"Finisher. Light weight, strict form."}]},
+2:{label:"Pull",exercises:[{n:"Deadlift / Romanian DL",s:"4x6-8",note:"Hinge at hips, not the lower back. Bar stays close to shins."},{n:"Barbell Row",s:"3x10-12",note:"Pull to lower chest. No hip bounce to get the weight up."},{n:"Lat Pulldown",s:"3x10-12",note:"Drive elbows down and back. Full stretch at the top."},{n:"Seated Cable Row",s:"3x12",note:"Squeeze hard at end range. Don't shrug."},{n:"Face Pull",s:"3x15",note:"High anchor, pull to face, external rotate at end position."},{n:"DB Hammer Curl",s:"3x12",note:"Strict - no swinging. Neutral grip throughout."}]},
+3:{label:"Legs A Quad",exercises:[{n:"Back Squat",s:"4x6-8",note:"Depth at least parallel. Knees track toes throughout."},{n:"Leg Press",s:"3x10-12",note:"High foot = more glute. Low foot = more quad."},{n:"Bulgarian Split Squat",s:"3x10 each",note:"Front foot far enough forward that shin stays vertical."},{n:"Leg Extension",s:"3x12-15",note:"Slow eccentric - 3 sec down. Full range."},{n:"Standing Calf Raise",s:"4x15",note:"Full range - stretch at bottom, hold 1 sec at top."}]},
+4:{label:"Muay Thai",exercises:[{n:"Warm-up + Shadow Boxing",s:"5-10 min",note:"Start slow, build pace. Focus on technique, not power."},{n:"Bag Work",s:"Rounds as coached",note:"Commit to combinations. Reset guard every time."},{n:"Pad Work",s:"Rounds as coached",note:"Listen to trainer. Precise over powerful."},{n:"Clinch / Sparring",s:"As programmed",note:"Control breathing. Stay relaxed between exchanges."},{n:"Cool-down Shadow",s:"2-3 min",note:"Slow it right down. Shake out and loosen up."}]},
+5:{label:"Upper + Arms",exercises:[{n:"Overhead Press",s:"4x6-8",note:"Full lockout. Brace core throughout."},{n:"Pull-ups / Weighted",s:"3x8-10",note:"Full hang to chin over bar. No kipping."},{n:"DB Row",s:"3x10-12 each",note:"Full stretch at bottom. Drive elbow back, not up."},{n:"Incline DB Curl",s:"3x10-12",note:"Full stretch at bottom - feel the bicep lengthen."},{n:"Overhead Tricep Extension",s:"3x12",note:"Keep elbows pointing forward - don't let them flare."},{n:"Hammer Curl",s:"3x12-15",note:"Strict, no swing. Neutral grip throughout."},{n:"Cable Curl",s:"3x15",note:"Finisher. Squeeze hard at top, slow on the way down."}]},
+6:{label:"Legs B Posterior",exercises:[{n:"Romanian Deadlift",s:"4x6-8",note:"Hips back, flat back. Feel the hamstring load on the way down."},{n:"Seated Leg Curl",s:"3x10-15",note:"Slow eccentric - 3 sec down. Full range."},{n:"Hip Thrust",s:"3x10-12",note:"Shoulders on bench, drive through heels, hard glute squeeze."},{n:"Single Leg Press",s:"3x12 each",note:"Don't lock out the knee at the top."},{n:"Glute Kickback Cable",s:"3x15 each",note:"Squeeze glute at top. Don't swing the hip."},{n:"Standing Calf Raise",s:"3x15",note:"Full range. Slow and controlled every rep."}]},
+0:{label:"Muay Thai Recovery",exercises:[{n:"Active Recovery / Light Session",s:"As programmed",note:"Today is technique and movement - not intensity."},{n:"Shadow Boxing",s:"3-5 min",note:"Slow and deliberate. Focus on form, not speed."},{n:"Light Bag Work",s:"Optional",note:"Only if energy is there. Don't force it."},{n:"Mobility Work",s:"See Mobility tab",note:"This is the priority today."}]}
+};
+
+var VITAMINS=[
+  {id:"v1",n:"Vitamin C",time:"Morning",note:"With smoothie - immune and collagen",p:false},
+  {id:"v2",n:"Fish Oil",time:"Any meal",note:"Anti-inflammatory, joint health",p:false},
+  {id:"v3",n:"Magnesium Glycinate",time:"Before bed",note:"Sleep and muscle recovery",p:false},
+  {id:"v4",n:"Swisse Hair Skin Nails+",time:"With meal",note:"As directed on pack",p:false},
+  {id:"v5",n:"Vitamin D3 2000IU + K2 100mcg",time:"With Meal 2",note:"Needs fat for absorption",p:true},
+  {id:"v6",n:"Zinc 25mg",time:"Meal 4 evening",note:"Testosterone + recovery + hair",p:true}
+];
+
+var CORE_NOTES=[
+  {id:"n1",icon:"🌙",title:"Sleep Target",body:"Aim for 7.5-8 hours. For a 4:30am gym alarm you need to be asleep by 8:30-9:00pm. Start winding down at 8pm - no screens, dim lights, magnesium taken."},
+  {id:"n2",icon:"📵",title:"Wind-Down Protocol",body:"8:00pm: Put the phone down. No social media after 8:30pm. Read, journal, or do light stretching instead. The quality of tomorrow's session is built tonight."},
+  {id:"n3",icon:"💧",title:"Hydration",body:"Minimum 3L water daily. On Muay Thai days, aim for 3.5L. Start with a full glass immediately on waking - before Disorder, before anything."},
+  {id:"n4",icon:"⚡",title:"Discipline Reminder",body:"Every tick in this app is a rep toward the version of yourself you are building. The days you don't feel like it are the most important days to do it anyway."},
+  {id:"n5",icon:"💰",title:"Financial Discipline",body:"Before any unplanned purchase today - pause 60 seconds. Ask: is this in the budget? Does this move me forward or backward? The belt tightens now so it loosens permanently later."},
+  {id:"n6",icon:"🧪",title:"Creatine Consistency",body:"Creatine only works with daily dosing. It's in your smoothie - don't skip the smoothie. If you do, add creatine to water and drink it anyway."}
+];
+var DAY_NOTES={
+  0:[{id:"dn1",icon:"🔄",title:"Recovery is Training",body:"Sunday is not a day off - it's an active recovery day. Your sleep tonight sets up the entire coming week."}],
+  1:[{id:"dn1",icon:"🏁",title:"Start the Week Strong",body:"Monday sets the tone. A complete Monday - all ticks, clean eating, in bed on time - creates momentum that carries through the week. Don't negotiate with the alarm."}],
+  2:[{id:"dn1",icon:"💈",title:"Nizoral Today",body:"Tuesday is a Nizoral wash day. Don't rush the application - 3-5 min dwell time on the scalp is what makes it work."}],
+  3:[{id:"dn1",icon:"📊",title:"Midweek Check",body:"Wednesday: halfway through the training week. How's energy? Hunger? Sleep? These are signals - adjust food and sleep if something feels off."}],
+  4:[{id:"dn1",icon:"🥊",title:"Muay Thai Performance",body:"Eat your 3pm meal. Don't skip it thinking you'll train better hungry - you won't. Meal 3 is performance fuel. Half Disorder at 4:15 is your activation signal."}],
+  5:[{id:"dn1",icon:"💈",title:"Nizoral Today",body:"Friday is the second Nizoral wash day. Same protocol - 3-5 min dwell, then condition."},{id:"dn2",icon:"🎯",title:"End of Work Week",body:"Don't let Friday become a drift day. Complete the protocol. The weekend starts after the last tick, not before."}],
+  6:[{id:"dn1",icon:"🎲",title:"Optional Cheat Meal Tonight",body:"Saturday Meal 4 is flagged as an optional cheat. If you've hit your numbers all week, take it. Make it a conscious choice, not a default."}]
+};
+
+// Days that have gym vs MMA
+var HAS_GYM={0:false,1:true,2:true,3:true,4:false,5:true,6:true};
+var HAS_MMA={0:true,1:false,2:false,3:false,4:true,5:false,6:false};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+var todayDate = new Date();
+var todayStr = todayDate.toISOString().split("T")[0];
+var viewDateStr = todayStr;
+var currentTab = "meals";
+var stretchMode = "warmup";
+var stretchSource = "gym";
+var openMeal = null;
+var openStretch = null;
+var openNote = null;
+var openWorkout = null;
+var hevyData = null;
+var hevyLoading = false;
+var hevyErr = null;
+var hevyOpenIdx = null;
+
+function getState(){try{return JSON.parse(localStorage.getItem("log_v5_"+viewDateStr)||"{}");}catch(e){return{};}}
+function saveState(patch){try{var s=getState();for(var k in patch)s[k]=patch[k];localStorage.setItem("log_v5_"+viewDateStr,JSON.stringify(s));}catch(e){}}
+function getTick(k){return!!getState()[k];}
+function toggleTick(k){if(viewDateStr!==todayStr)return;var s=getState();s[k]=!s[k];saveState(s);render();}
+
+// ── HEVY ──────────────────────────────────────────────────────────────────────
+function fetchHevy(){
+  hevyLoading=true;hevyErr=null;hevyData=null;
+  if(currentTab==="workout")renderContent();
+  fetch("https://api.hevyapp.com/v1/workouts?page=1&pageSize=5",{headers:{"api-key":HEVY_KEY}})
+    .then(function(r){if(!r.ok)throw new Error(""+r.status);return r.json();})
+    .then(function(d){hevyData=d.workouts||[];hevyLoading=false;if(currentTab==="workout")renderContent();})
+    .catch(function(e){hevyErr=e.message;hevyLoading=false;if(currentTab==="workout")renderContent();});
+}
+
+// ── CALENDAR ──────────────────────────────────────────────────────────────────
+function buildCalendar(){
+  var el=document.getElementById("cal-inner");
+  el.innerHTML="";
+  for(var i=-7;i<=7;i++){
+    var d=new Date(todayDate);
+    d.setDate(d.getDate()+i);
+    var ds=d.toISOString().split("T")[0];
+    var dw=d.getDay();
+    var isTd=ds===todayStr;
+    var isV=ds===viewDateStr;
+    var isPast=ds<todayStr;
+    var isMT=[0,4].indexOf(dw)>-1;
+    var btn=document.createElement("button");
+    btn.className="cd"+(isTd?" today":"")+(isV?" active":"");
+    btn.innerHTML='<div class="orb" style="font-size:7px;letter-spacing:1px;color:'+(isV?"var(--teal)":isTd?"var(--text2)":isPast?"var(--text3)":"var(--text2)")+'">'+DS[dw]+'</div><div class="orb" style="font-size:14px;font-weight:700;color:'+(isV?"var(--teal)":isTd?"#fff":isPast?"var(--text3)":"var(--text)")+'">'+d.getDate()+'</div><div style="width:4px;height:4px;border-radius:50%;margin:3px auto 0;background:'+(isMT?"var(--red)":"var(--teal)")+';opacity:'+(isV?1:0.3)+'"></div>';
+    (function(s){btn.onclick=function(){viewDateStr=s;render();scrollCal();};})(ds);
+    el.appendChild(btn);
+  }
+}
+function scrollCal(){var a=document.querySelector(".cd.active");if(a)a.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});}
+function goToday(){viewDateStr=todayStr;render();}
+
+// ── HEADER ────────────────────────────────────────────────────────────────────
+function updateHeader(){
+  var vd=new Date(viewDateStr+"T12:00:00");
+  var dow=vd.getDay();
+  var isToday=viewDateStr===todayStr;
+  document.getElementById("sys-label").textContent=isToday?"SYSTEM ACTIVE":"ARCHIVE VIEW";
+  document.getElementById("date-text").textContent=DF[dow].slice(0,3)+" "+vd.getDate()+" "+MONTHS[vd.getMonth()]+" "+vd.getFullYear();
+  document.getElementById("train-badge").textContent=TL[dow];
+  document.getElementById("today-btn").style.display=isToday?"none":"inline-block";
+  var meals=MEALS[dow]||[];
+  document.getElementById("mc-cal").textContent=meals.reduce(function(s,m){return s+m.cal;},0).toLocaleString();
+  document.getElementById("mc-pro").textContent=meals.reduce(function(s,m){return s+m.pro;},0)+"g";
+  document.getElementById("mc-sess").textContent=TS[dow];
+  if(isToday){
+    var state=getState();
+    var all=[],done=0;
+    meals.forEach(function(_,i){all.push("m"+i);});
+    var h=HAIR[dow];
+    h.steps.forEach(function(_,i){all.push("h"+i);});
+    if(h.nightSteps)h.nightSteps.forEach(function(_,i){all.push("hn"+i);});
+    var wd=WORKOUT[dow];
+    wd.exercises.forEach(function(_,i){all.push("wo"+i);});
+    VITAMINS.filter(function(v){return!v.p;}).forEach(function(v){all.push("vit_"+v.id);});
+    // stretch keys
+    var gs=GYM_STRETCH[dow];
+    if(gs){
+      (gs.warmup||[]).forEach(function(_,i){all.push("sw"+i);});
+      (gs.cooldown||[]).forEach(function(_,i){all.push("sc"+i);});
+    }
+    if(HAS_MMA[dow]){
+      MMA_STRETCH.warmup.forEach(function(_,i){all.push("mw"+i);});
+      MMA_STRETCH.cooldown.forEach(function(_,i){all.push("mc"+i);});
+    }
+    all.push("beer_done","gamble_done");
+    all.forEach(function(k){if(state[k])done++;});
+    var pct=all.length?Math.round((done/all.length)*100):0;
+    var pc=pct===100?"var(--green)":pct>66?"var(--teal)":pct>33?"var(--gold)":"var(--red)";
+    document.getElementById("pct-val").textContent=pct+"%";
+    document.getElementById("pct-val").style.color=pc;
+    document.getElementById("prog-bar").style.width=pct+"%";
+    document.getElementById("prog-bar").style.background=pct===100?"var(--green)":"linear-gradient(90deg,#1a5a9a,var(--teal))";
+    var mDone=meals.filter(function(_,i){return state["m"+i];}).length;
+    document.getElementById("b-meals").textContent=mDone+"/"+meals.length;
+    var wDone=wd.exercises.filter(function(_,i){return state["wo"+i];}).length;
+    document.getElementById("b-workout").textContent=wDone+"/"+wd.exercises.length;
+    var vDone=VITAMINS.filter(function(v){return!v.p&&state["vit_"+v.id];}).length;
+    document.getElementById("b-vitamins").textContent=vDone+"/"+VITAMINS.filter(function(v){return!v.p;}).length;
+    var hDone=h.steps.filter(function(_,i){return state["h"+i];}).length;
+    document.getElementById("b-hair").textContent=hDone+"/"+h.steps.length;
+    // stretch badge
+    var stretchAll=0,stretchDone=0;
+    if(gs){(gs.warmup||[]).forEach(function(_,i){stretchAll++;if(state["sw"+i])stretchDone++;});(gs.cooldown||[]).forEach(function(_,i){stretchAll++;if(state["sc"+i])stretchDone++;});}
+    if(HAS_MMA[dow]){MMA_STRETCH.warmup.forEach(function(_,i){stretchAll++;if(state["mw"+i])stretchDone++;});MMA_STRETCH.cooldown.forEach(function(_,i){stretchAll++;if(state["mc"+i])stretchDone++;});}
+    document.getElementById("b-stretch").textContent=stretchDone+"/"+stretchAll;
+  } else {
+    document.getElementById("pct-val").textContent=DS[dow];
+    document.getElementById("pct-val").style.color="var(--text3)";
+    document.getElementById("prog-bar").style.width="0%";
+    var meals2=MEALS[dow]||[];
+    document.getElementById("b-meals").textContent=meals2.length+" meals";
+    document.getElementById("b-workout").textContent="";
+    document.getElementById("b-vitamins").textContent="";
+    document.getElementById("b-hair").textContent="";
+    document.getElementById("b-stretch").textContent="";
+  }
+}
+
+function switchTab(t){
+  currentTab=t;
+  document.querySelectorAll(".tab").forEach(function(el){el.classList.toggle("active",el.dataset.tab===t);});
+  renderContent();
+}
+
+function render(){buildCalendar();scrollCal();updateHeader();renderContent();}
+function renderContent(){
+  switch(currentTab){
+    case"meals":renderMeals();break;
+    case"workout":renderWorkout();break;
+    case"stretch":renderStretch();break;
+    case"hair":renderHair();break;
+    case"vitamins":renderVitamins();break;
+    case"notes":renderNotes();break;
+    case"life":renderLife();break;
+  }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function chk(done,color){
+  return '<div class="chk'+(done?' done':'')+'" style="border-color:'+(done?color:'var(--border2)')+';background:'+(done?color:'transparent')+';box-shadow:'+(done?'0 0 8px '+color+'60':'none')+'">'+(done?'<span>&#10003;</span>':'')+'</div>';
+}
+function chip(tag,color){
+  return '<span class="chip" style="background:'+color+'20;border:1px solid '+color+'35;color:'+color+'">'+tag+'</span>';
+}
+
+// ── MEALS ─────────────────────────────────────────────────────────────────────
+function renderMeals(){
+  var vd=new Date(viewDateStr+"T12:00:00"),dow=vd.getDay(),isToday=viewDateStr===todayStr;
+  var meals=MEALS[dow]||[];
+  var h='<div class="sec">';
+  meals.forEach(function(m,i){
+    var k="m"+i,done=getTick(k),open=openMeal===i,color=tc(m.tag);
+    h+='<div class="row'+(done?' row-done':'')+'" onclick="openMeal=openMeal==='+i+'?null:'+i+';renderContent()">';
+    h+='<div class="ri">';
+    h+='<div onclick="event.stopPropagation();'+(isToday?'toggleTick(\''+k+'\')':'')+'" style="width:19px;height:19px;flex-shrink:0;border-radius:3px;border:1.5px solid '+(done?color:'var(--border2)')+';background:'+(done?color:'transparent')+';display:flex;align-items:center;justify-content:center;cursor:'+(isToday?'pointer':'default')+';margin-top:1px;box-shadow:'+(done?'0 0 8px '+color+'40':'none')+';transition:all 0.15s">'+(done?'<span style="color:#0e1420;font-size:10px;font-weight:900">&#10003;</span>':'')+'</div>';
+    h+='<div style="flex:1;min-width:0"><div style="display:flex;gap:7px;align-items:center;margin-bottom:3px;flex-wrap:wrap">'+chip(m.tag,color)+'<span style="font-family:Orbitron;font-size:8px;color:var(--text3)">'+m.time+'</span></div>';
+    h+='<div style="font-size:15px;font-weight:600;color:'+(done?'#3a6a4a':'var(--text)')+';text-decoration:'+(done?'line-through':'none')+'">'+m.name+'</div>';
+    if(m.note)h+='<div style="font-size:9px;color:var(--gold);margin-top:2px">'+m.note+'</div>';
+    h+='</div>';
+    h+='<div style="text-align:right;flex-shrink:0"><div style="font-family:Orbitron;font-size:12px;color:'+(done?'#2a5a3a':color)+';font-weight:700">'+m.cal+'</div><div style="font-size:7px;color:var(--text3);letter-spacing:1px">CAL</div><div style="font-family:Orbitron;font-size:11px;color:'+(done?'#2a5a3a':'var(--teal)')+';margin-top:2px">'+m.pro+'g</div><div style="font-size:7px;color:var(--text3);letter-spacing:1px">PRO</div></div>';
+    h+='</div>';
+    if(open){
+      h+='<div class="ep"><div class="el">INGREDIENTS</div>';
+      m.items.forEach(function(item){h+='<div class="ir"><div class="dot" style="background:'+color+'"></div><span style="font-size:11px;color:var(--text2)">'+item+'</span></div>';});
+      h+='<div class="rb"><div class="el">HOW TO MAKE IT</div><div class="ri2">'+m.recipe.intro+'</div>';
+      m.recipe.steps.forEach(function(s,j){h+='<div class="rs"><span class="rn">'+(j+1)+'.</span><span class="rt">'+s+'</span></div>';});
+      h+='</div></div>';
+    }
+    h+='</div>';
+  });
+  // macro summary
+  var tc2=MEALS[dow]||[];
+  var totalCal=tc2.reduce(function(s,m){return s+m.cal;},0);
+  var totalPro=tc2.reduce(function(s,m){return s+m.pro;},0);
+  var dow2=new Date(viewDateStr+"T12:00:00").getDay();
+  h+='<div style="margin:14px 18px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:14px">';
+  h+='<div class="orb" style="font-size:8px;color:var(--text3);letter-spacing:2px;margin-bottom:12px">DAILY TARGETS</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  [{l:"CALORIES",v:totalCal.toLocaleString(),t:([0,4].indexOf(dow2)>-1?"3,400":"3,000"),c:"var(--gold)"},{l:"PROTEIN",v:totalPro+"g",t:([0,4].indexOf(dow2)>-1?"200g":"190g"),c:"var(--teal)"},{l:"CREATINE",v:"5g",t:"5g",c:"var(--purple)"}].forEach(function(s){
+    h+='<div style="flex:1 1 80px;background:var(--bg3);border:1px solid '+s.c+'20;border-radius:5px;padding:10px"><div class="orb" style="font-size:7px;color:var(--text3);letter-spacing:1.5px;margin-bottom:4px">'+s.l+'</div><div class="orb" style="font-size:16px;font-weight:700;color:'+s.c+'">'+s.v+'</div><div style="font-size:8px;color:var(--text3);margin-top:2px">target '+s.t+'</div></div>';
+  });
+  h+='</div></div></div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+// ── WORKOUT ───────────────────────────────────────────────────────────────────
+function renderWorkout(){
+  var vd=new Date(viewDateStr+"T12:00:00"),dow=vd.getDay(),isToday=viewDateStr===todayStr;
+  var workout=WORKOUT[dow];
+  var warmup=GYM_STRETCH[dow]?GYM_STRETCH[dow].warmup:MMA_STRETCH.warmup;
+  var h='<div class="sec" style="padding:14px 18px">';
+  // Hevy
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="orb" style="font-size:10px;color:var(--teal);letter-spacing:2px">HEVY LIVE SESSION</div>';
+  h+='<button onclick="fetchHevy()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:6px 14px;color:var(--teal);font-family:Orbitron;font-size:8px;letter-spacing:1px">'+(hevyLoading?"SYNCING":"&#8635; REFRESH")+'</button></div>';
+  if(hevyErr)h+='<div style="background:#1a0808;border:1px solid #3a1010;border-radius:6px;padding:12px;font-size:11px;color:var(--red);margin-bottom:12px">Hevy error: '+hevyErr+'</div>';
+  if(!hevyData&&!hevyErr&&!hevyLoading)h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;margin-bottom:12px"><div class="orb" style="font-size:9px;color:var(--text3);letter-spacing:2px">AWAITING HEVY SYNC</div><div style="font-size:10px;color:var(--text3);margin-top:6px">Tap refresh to load your workouts</div></div>';
+  if(hevyLoading)h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;margin-bottom:12px"><div class="orb" style="font-size:9px;color:var(--teal);letter-spacing:2px">SYNCING WITH HEVY...</div></div>';
+  if(hevyData&&hevyData.length===0)h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;margin-bottom:12px"><div class="orb" style="font-size:9px;color:var(--text3);letter-spacing:2px">NO SESSION LOGGED YET</div></div>';
+  if(hevyData&&hevyData.length>0){
+    hevyData.forEach(function(w,wi){
+      var isOpen=hevyOpenIdx===wi;
+      h+='<div class="card" style="margin-bottom:12px"><div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="hevyOpenIdx='+(isOpen?-1:wi)+';renderContent()">';
+      h+='<div><div class="orb" style="font-size:13px;font-weight:700;color:var(--teal)">'+(w.title||"Session")+'</div>';
+      h+='<div style="font-size:9px;color:var(--text3);margin-top:3px;letter-spacing:1px">'+(w.start_time?new Date(w.start_time).toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"}):"")+' &middot; '+(w.exercises?w.exercises.length:0)+' EXERCISES'+(w.duration_seconds?' &middot; '+Math.round(w.duration_seconds/60)+' MIN':'')+'</div></div>';
+      h+='<span style="color:var(--text3);font-size:11px">'+(isOpen?"&#9650;":"&#9660;")+'</span></div>';
+      if(isOpen&&w.exercises){
+        w.exercises.forEach(function(ex,ei){
+          var k="hex_"+wi+"_"+ei,done=getTick(k);
+          h+='<div class="row'+(done?' row-done':'')+'" style="border-bottom:1px solid var(--border)" onclick="'+(isToday?'toggleTick(\''+k+'\')':'')+'">';
+          h+='<div style="padding:11px 14px;display:flex;gap:10px;align-items:flex-start">';
+          h+='<div style="width:16px;height:16px;flex-shrink:0;border:1.5px solid '+(done?'var(--teal)':'var(--border2)')+';border-radius:2px;background:'+(done?'var(--teal)':'transparent')+';display:flex;align-items:center;justify-content:center;margin-top:2px">'+(done?'<span style="color:#0e1420;font-size:9px;font-weight:900">&#10003;</span>':'')+'</div>';
+          h+='<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+(done?'#2a5a3a':'var(--text)')+';text-decoration:'+(done?'line-through':'none')+'">'+ex.title+'</div>';
+          h+='<div style="font-size:9px;color:var(--text3);margin-top:3px">'+(ex.sets?ex.sets.length:0)+' sets';
+          if(ex.sets&&ex.sets.length>0){ex.sets.forEach(function(s){h+=' <span style="color:var(--text2)">'+(s.weight_kg||"BW")+'kg x '+(s.reps||"-")+'</span>';});}
+          h+='</div></div></div></div>';
+        });
+      }
+      h+='</div>';
+    });
+  }
+  // Pre-workout warmup
+  h+='<div class="card" style="margin-bottom:12px"><div class="card-hd"><div class="orb" style="font-size:9px;color:var(--orange);letter-spacing:2px">PRE-WORKOUT ACTIVATION</div></div>';
+  warmup.forEach(function(s,i){
+    var k="pw"+i,done=getTick(k);
+    h+='<div class="row'+(done?' row-done':'')+'" style="border-bottom:1px solid var(--border)" onclick="'+(isToday?'toggleTick(\''+k+'\')':'')+'">';
+    h+='<div style="padding:10px 14px;display:flex;gap:10px;align-items:center">';
+    h+='<div style="width:16px;height:16px;flex-shrink:0;border:1.5px solid '+(done?'var(--orange)':'var(--border2)')+';border-radius:2px;background:'+(done?'var(--orange)':'transparent')+';display:flex;align-items:center;justify-content:center">'+(done?'<span style="color:#0e1420;font-size:9px;font-weight:900">&#10003;</span>':'')+'</div>';
+    h+='<div style="flex:1"><div style="font-size:12px;color:'+(done?'#4a3010':'var(--text)')+';text-decoration:'+(done?'line-through':'none')+'">'+s.name+'</div><div style="font-size:9px;color:var(--text3)">'+s.dur+'</div></div>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  // Exercise list
+  h+='<div class="card"><div class="card-hd"><div class="orb" style="font-size:9px;color:var(--teal);letter-spacing:2px">'+workout.label.toUpperCase()+' EXERCISES</div></div>';
+  workout.exercises.forEach(function(ex,i){
+    var k="wo"+i,done=getTick(k),isOpen=openWorkout===i;
+    h+='<div style="border-bottom:1px solid var(--border)">';
+    h+='<div class="row'+(done?' row-done':'')+'" style="border-bottom:none" onclick="openWorkout=openWorkout==='+i+'?null:'+i+';renderContent()">';
+    h+='<div style="padding:11px 14px;display:flex;gap:10px;align-items:center">';
+    h+='<div onclick="event.stopPropagation();'+(isToday?'toggleTick(\''+k+'\')':'')+'" style="width:16px;height:16px;flex-shrink:0;border:1.5px solid '+(done?'var(--teal)':'var(--border2)')+';border-radius:2px;background:'+(done?'var(--teal)':'transparent')+';display:flex;align-items:center;justify-content:center;cursor:'+(isToday?'pointer':'default')+'">'+(done?'<span style="color:#0e1420;font-size:9px;font-weight:900">&#10003;</span>':'')+'</div>';
+    h+='<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+(done?'#2a5a3a':'var(--text)')+';text-decoration:'+(done?'line-through':'none')+'">'+ex.n+'</div>';
+    h+='<div class="orb" style="font-size:9px;color:var(--text3);margin-top:1px;letter-spacing:1px">'+ex.s+'</div></div>';
+    h+='<span style="color:var(--text3);font-size:10px">'+(isOpen?"&#9650;":"&#9660;")+'</span></div></div>';
+    if(isOpen)h+='<div style="padding:8px 14px 10px 44px;background:var(--bg3);border-top:1px solid var(--border)"><div style="font-size:12px;color:var(--teal);font-style:italic;line-height:1.5">'+ex.note+'</div></div>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+// ── STRETCH ───────────────────────────────────────────────────────────────────
+function buildStretchList(items, keyPrefix, accentColor, isToday){
+  var h="";
+  items.forEach(function(s,i){
+    var k=keyPrefix+i,done=getTick(k),open=openStretch===keyPrefix+"_"+i;
+    h+='<div class="sc" style="border-color:'+(done?accentColor+'40':'var(--border)')+'"><div class="sh'+(done?' row-done':'')+'" onclick="openStretch=openStretch===\''+keyPrefix+'_'+i+'\'?null:\''+keyPrefix+'_'+i+'\';renderContent()">';
+    h+='<div onclick="event.stopPropagation();'+(isToday?'toggleTick(\''+k+'\')':'')+'" style="width:19px;height:19px;flex-shrink:0;border:1.5px solid '+(done?accentColor:'var(--border2)')+';border-radius:3px;background:'+(done?accentColor:'transparent')+';display:flex;align-items:center;justify-content:center;cursor:'+(isToday?'pointer':'default')+';box-shadow:'+(done?'0 0 8px '+accentColor+'40':'none')+'">'+(done?'<span style="color:#0e1420;font-size:10px;font-weight:900">&#10003;</span>':'')+'</div>';
+    h+='<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+(done?'#3a2a6a':'var(--text)')+';text-decoration:'+(done?'line-through':'none')+'">'+s.name+'</div><div style="font-size:9px;color:var(--text3);margin-top:1px">'+s.dur+'</div></div>';
+    h+='<span style="color:var(--text3);font-size:10px">'+(open?"&#9650;":"&#9660;")+'</span></div>';
+    if(open){
+      h+='<div class="sx"><div style="font-family:Orbitron;font-size:8px;color:var(--text3);letter-spacing:2px;margin-bottom:8px">STEPS</div>';
+      s.steps.forEach(function(st,j){h+='<div class="rs"><span class="rn">'+(j+1)+'.</span><span class="rt">'+st+'</span></div>';});
+      h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">';
+      h+='<div class="ib" style="background:var(--bg2);border:1px solid #1a4a2a"><div class="orb" style="font-size:7px;color:#2a6a3a;letter-spacing:1px;margin-bottom:4px">BREATHING</div><div style="font-size:11px;color:#4a8a5a;line-height:1.5">'+s.breath+'</div></div>';
+      h+='<div class="ib" style="background:var(--bg2);border:1px solid #3a1818"><div class="orb" style="font-size:7px;color:#5a2a2a;letter-spacing:1px;margin-bottom:4px">COMMON MISTAKE</div><div style="font-size:11px;color:#7a3a3a;line-height:1.5">'+s.mistake+'</div></div>';
+      h+='</div></div>';
+    }
+    h+='</div>';
+  });
+  return h;
+}
+
+function renderStretch(){
+  var vd=new Date(viewDateStr+"T12:00:00"),dow=vd.getDay(),isToday=viewDateStr===todayStr;
+  var hasGym=HAS_GYM[dow],hasMMA=HAS_MMA[dow];
+  // Auto-set source if only one type
+  if(hasGym&&!hasMMA)stretchSource="gym";
+  if(hasMMA&&!hasGym)stretchSource="mma";
+
+  var gymData=GYM_STRETCH[dow];
+  var h='<div class="sec" style="padding:14px 18px">';
+
+  // Source toggle - only show if day has both (future proofing) or just label current
+  if(hasGym&&hasMMA){
+    h+='<div class="tg" style="margin-bottom:10px">';
+    h+='<button class="tb'+(stretchSource==="gym"?" active":"")+'" style="'+(stretchSource==="gym"?"background:#162a40;border-color:var(--teal);color:var(--teal)":"")+'" onclick="stretchSource=\'gym\';openStretch=null;renderContent()">&#127947; GYM</button>';
+    h+='<button class="tb'+(stretchSource==="mma"?" active":"")+'" style="'+(stretchSource==="mma"?"background:#1a0f18;border-color:var(--red);color:var(--red)":"")+'" onclick="stretchSource=\'mma\';openStretch=null;renderContent()">&#129354; MMA</button>';
+    h+='</div>';
+  }
+
+  // Warm-up / Cool-down toggle
+  h+='<div class="tg">';
+  h+='<button class="tb'+(stretchMode==="warmup"?" active":"")+'" style="'+(stretchMode==="warmup"?"background:#1a1208;border-color:var(--orange);color:var(--orange)":"")+'" onclick="stretchMode=\'warmup\';openStretch=null;renderContent()">WARM-UP</button>';
+  h+='<button class="tb'+(stretchMode==="cooldown"?" active":"")+'" style="'+(stretchMode==="cooldown"?"background:#130f1a;border-color:var(--purple);color:var(--purple)":"")+'" onclick="stretchMode=\'cooldown\';openStretch=null;renderContent()">COOL-DOWN</button>';
+  h+='</div>';
+
+  // Show GYM PRE/POST option as additional toggles on gym days
+  if(stretchSource==="gym"){
+    h+='<div class="tg" style="margin-bottom:14px">';
+    h+='<button class="tb'+(stretchMode==="gym_pre"?" active":"")+'" style="'+(stretchMode==="gym_pre"?"background:#0a1a10;border-color:var(--teal);color:var(--teal)":"")+'" onclick="stretchMode=\'gym_pre\';openStretch=null;renderContent()">GYM PRE</button>';
+    h+='<button class="tb'+(stretchMode==="gym_post"?" active":"")+'" style="'+(stretchMode==="gym_post"?"background:#0a1a10;border-color:var(--green);color:var(--green)":"")+'" onclick="stretchMode=\'gym_post\';openStretch=null;renderContent()">GYM POST</button>';
+    h+='</div>';
+  }
+
+  var items, keyPrefix, accentColor, sectionLabel;
+  if(stretchSource==="mma"){
+    if(stretchMode==="warmup"||stretchMode==="gym_pre"){items=MMA_STRETCH.warmup;keyPrefix="mw";accentColor="var(--red)";sectionLabel="MMA / MUAY THAI WARM-UP";}
+    else{items=MMA_STRETCH.cooldown;keyPrefix="mc";accentColor="var(--blue)";sectionLabel="MMA / MUAY THAI COOL-DOWN";}
+  } else if(stretchMode==="gym_pre"){
+    items=GYM_PRE;keyPrefix="gp";accentColor="var(--teal)";sectionLabel="GYM PRE-WORKOUT";
+  } else if(stretchMode==="gym_post"){
+    items=GYM_POST;keyPrefix="go";accentColor="var(--green)";sectionLabel="GYM POST-WORKOUT";
+  } else if(stretchMode==="warmup"){
+    items=gymData?(gymData.warmup||[]):[];keyPrefix="sw";accentColor="var(--orange)";sectionLabel=(gymData?gymData.label+" ":"")+"WARM-UP";
+  } else {
+    items=gymData?(gymData.cooldown||[]):[];keyPrefix="sc";accentColor="var(--purple)";sectionLabel=(gymData?gymData.label+" ":"")+"COOL-DOWN";
+  }
+
+  h+='<div class="orb" style="font-size:9px;color:'+accentColor+';letter-spacing:2px;margin-bottom:12px">'+sectionLabel+'</div>';
+  h+=buildStretchList(items,keyPrefix,accentColor,isToday);
+  h+='</div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+// ── HAIR ──────────────────────────────────────────────────────────────────────
+function renderHair(){
+  var vd=new Date(viewDateStr+"T12:00:00"),dow=vd.getDay(),isToday=viewDateStr===todayStr;
+  var hair=HAIR[dow];
+  var h='<div class="sec" style="padding:14px 18px">';
+  h+='<div style="margin-bottom:14px"><div class="orb" style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:8px">TODAY - '+hair.label.toUpperCase()+'</div>';
+  h+='<div style="display:flex;flex-wrap:wrap;gap:5px">';
+  hair.products.forEach(function(p){h+='<span class="chip" style="background:var(--bg3);border:1px solid var(--border2);color:var(--teal)">'+p+'</span>';});
+  h+='</div></div>';
+  h+='<div class="orb" style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:8px">MORNING ROUTINE</div>';
+  h+='<div class="card" style="margin-bottom:'+(hair.nightSteps?"14px":"0")+'">';
+  hair.steps.forEach(function(s,i){
+    var k="h"+i,done=getTick(k);
+    h+='<div class="row'+(done?' row-done':'')+'" onclick="'+(isToday?'toggleTick(\''+k+'\')':'')+'">';
+    h+='<div style="padding:12px 14px;display:flex;gap:12px;align-items:flex-start">';
+    h+='<div style="width:19px;height:19px;flex-shrink:0;margin-top:1px;border:1.5px solid '+(done?'var(--teal)':'var(--border2)')+';border-radius:3px;background:'+(done?'var(--teal)':'transparent')+';display:flex;align-items:center;justify-content:center;box-shadow:'+(done?'0 0 8px var(--teal)40':'none')+'">'+(done?'<span style="color:#0e1420;font-size:10px;font-weight:900">&#10003;</span>':'')+'</div>';
+    h+='<div style="flex:1"><span class="orb" style="font-size:8px;color:var(--text3);margin-right:8px">0'+(i+1)+'</span><span style="font-size:13px;color:'+(done?'#2a5a3a':'var(--text)')+';text-decoration:'+(done?'line-through':'none')+'">'+s+'</span></div>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  if(hair.nightSteps){
+    h+='<div class="orb" style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:8px">POST-TRAINING RINSE</div>';
+    h+='<div class="card">';
+    hair.nightSteps.forEach(function(s,i){
+      var k="hn"+i,done=getTick(k);
+      h+='<div class="row'+(done?' row-done':'')+'" onclick="'+(isToday?'toggleTick(\''+k+'\')':'')+'">';
+      h+='<div style="padding:12px 14px;display:flex;gap:12px;align-items:center">';
+      h+='<div style="width:19px;height:19px;flex-shrink:0;border:1.5px solid '+(done?'var(--teal)':'var(--border2)')+';border-radius:3px;background:'+(done?'var(--teal)':'transparent')+';display:flex;align-items:center;justify-content:center">'+(done?'<span style="color:#0e1420;font-size:10px;font-weight:900">&#10003;</span>':'')+'</div>';
+      h+='<span style="font-size:13px;color:'+(done?'#2a5a3a':'var(--text)')+';text-decoration:'+(done?'line-through':'none')+';flex:1">'+s+'</span>';
+      h+='</div></div>';
+    });
+    h+='</div>';
+  }
+  h+='</div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+// ── VITAMINS ──────────────────────────────────────────────────────────────────
+function renderVitamins(){
+  var isToday=viewDateStr===todayStr;
+  var h='<div class="sec" style="padding:14px 18px">';
+  h+='<div class="orb" style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:10px">ACTIVE STACK</div>';
+  h+='<div class="card" style="margin-bottom:14px">';
+  VITAMINS.filter(function(v){return!v.p;}).forEach(function(v){
+    var k="vit_"+v.id,done=getTick(k);
+    h+='<div class="row'+(done?' row-done':'')+'" onclick="'+(isToday?'toggleTick(\''+k+'\')':'')+'">';
+    h+='<div style="padding:13px 14px;display:flex;gap:12px;align-items:center">';
+    h+='<div style="width:19px;height:19px;flex-shrink:0;border:1.5px solid '+(done?'var(--green)':'var(--border2)')+';border-radius:3px;background:'+(done?'var(--green)':'transparent')+';display:flex;align-items:center;justify-content:center;box-shadow:'+(done?'0 0 8px var(--green)40':'none')+'">'+(done?'<span style="color:#0e1420;font-size:10px;font-weight:900">&#10003;</span>':'')+'</div>';
+    h+='<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+(done?'#0a4a2a':'var(--text)')+';text-decoration:'+(done?'line-through':'none')+'">'+v.n+'</div>';
+    h+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+v.time+' - '+v.note+'</div></div>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  h+='<div class="orb" style="font-size:9px;color:var(--border2);letter-spacing:2px;margin-bottom:8px">COMING SOON</div>';
+  h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;opacity:0.4">';
+  VITAMINS.filter(function(v){return v.p;}).forEach(function(v){
+    h+='<div style="padding:13px 14px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border)">';
+    h+='<div style="width:19px;height:19px;flex-shrink:0;border:1px solid var(--border);border-radius:3px"></div>';
+    h+='<div style="flex:1"><div style="font-size:13px;color:var(--text3);font-weight:600">'+v.n+'</div>';
+    h+='<div style="font-size:9px;color:var(--text3);margin-top:2px">'+v.note+'</div></div>';
+    h+='<span class="chip" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:7px">PENDING</span>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+// ── NOTES ─────────────────────────────────────────────────────────────────────
+function renderNotes(){
+  var vd=new Date(viewDateStr+"T12:00:00"),dow=vd.getDay();
+  var notes=CORE_NOTES.concat(DAY_NOTES[dow]||[]);
+  var h='<div class="sec" style="padding:14px 18px">';
+  h+='<div class="orb" style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:12px">DIRECTIVES - '+DS[dow]+'</div>';
+  notes.forEach(function(n){
+    var open=openNote===n.id;
+    h+='<div class="nc"><div class="nh" onclick="openNote=openNote===\''+n.id+'\'?null:\''+n.id+'\';renderContent()">';
+    h+='<span style="font-size:20px;flex-shrink:0">'+n.icon+'</span>';
+    h+='<div style="flex:1"><div style="font-size:15px;font-weight:600;color:var(--text);letter-spacing:0.5px">'+n.title+'</div></div>';
+    h+='<span style="color:var(--text3);font-size:10px">'+(open?"&#9650;":"&#9660;")+'</span></div>';
+    if(open)h+='<div class="nb"><div style="font-size:13px;color:var(--text2);line-height:1.7">'+n.body+'</div></div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+// ── LIFESTYLE ─────────────────────────────────────────────────────────────────
+function renderLife(){
+  var isToday=viewDateStr===todayStr;
+  var state=getState();
+  var beer=state.beer_done!=null?state.beer_done:null;
+  var bc=state.beer_count||1;
+  var gamble=state.gamble_done!=null?state.gamble_done:null;
+  var gw=state.gamble_what||"";
+  var h='<div class="sec" style="padding:14px 18px">';
+  // Beer
+  h+='<div class="lc"><div style="display:flex;justify-content:space-between;align-items:flex-start">';
+  h+='<div><div class="orb" style="font-size:13px;font-weight:700;color:var(--gold);letter-spacing:2px">&#127866; ALCOHOL</div>';
+  h+='<div style="font-size:10px;color:var(--text3);margin-top:4px;letter-spacing:1px">DID YOU DRINK TODAY?</div></div>';
+  if(beer!==null)h+='<span class="chip" style="background:'+(beer?'#1a1408':'#081a10')+';border:1px solid '+(beer?'var(--gold)40':'var(--green)40')+';color:'+(beer?'var(--gold)':'var(--green)')+'">'+(beer?'YES - '+bc:'CLEAN')+'</span>';
+  h+='</div><div class="yn">';
+  h+='<button class="ynb" style="'+(beer===true?'background:#1a1408;border-color:var(--gold);color:var(--gold)':'')+'" onclick="setBeer(true)">YES</button>';
+  h+='<button class="ynb" style="'+(beer===false?'background:#081a10;border-color:var(--green);color:var(--green)':'')+'" onclick="setBeer(false)">NO</button>';
+  h+='</div>';
+  if(beer){
+    h+='<div style="margin-top:12px"><div class="orb" style="font-size:8px;color:var(--text3);letter-spacing:2px;margin-bottom:8px">HOW MANY?</div>';
+    h+='<div style="display:flex;gap:6px">';
+    [1,2,3,4,5,"6+"].forEach(function(n){h+='<button class="cb" style="'+(bc===n?'background:#1a1408;border-color:var(--gold);color:var(--gold)':'')+'" onclick="setBeerCount(\''+n+'\')">'+n+'</button>';});
+    h+='</div></div>';
+  }
+  h+='</div>';
+  // Gambling
+  h+='<div class="lc"><div style="display:flex;justify-content:space-between;align-items:flex-start">';
+  h+='<div><div class="orb" style="font-size:13px;font-weight:700;color:var(--red);letter-spacing:2px">&#127920; GAMBLING</div>';
+  h+='<div style="font-size:10px;color:var(--text3);margin-top:4px;letter-spacing:1px">DID YOU GAMBLE TODAY?</div></div>';
+  if(gamble!==null)h+='<span class="chip" style="background:'+(gamble?'#1a0808':'#081a10')+';border:1px solid '+(gamble?'var(--red)40':'var(--green)40')+';color:'+(gamble?'var(--red)':'var(--green)')+'">'+(gamble?'YES':'CLEAN')+'</span>';
+  h+='</div><div class="yn">';
+  h+='<button class="ynb" style="'+(gamble===true?'background:#1a0808;border-color:var(--red);color:var(--red)':'')+'" onclick="setGamble(true)">YES</button>';
+  h+='<button class="ynb" style="'+(gamble===false?'background:#081a10;border-color:var(--green);color:var(--green)':'')+'" onclick="setGamble(false)">NO</button>';
+  h+='</div>';
+  if(gamble){
+    h+='<div style="margin-top:12px"><div class="orb" style="font-size:8px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">WHAT / WHERE?</div>';
+    h+='<input value="'+gw+'" oninput="setGambleWhat(this.value)" placeholder="sports bet, pokies, etc..." style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:10px 12px;color:var(--text);font-size:13px"></div>';
+  }
+  h+='</div>';
+  // Score
+  if(isToday){
+    var vd=new Date(viewDateStr+"T12:00:00"),dow=vd.getDay();
+    var all=[];
+    (MEALS[dow]||[]).forEach(function(_,i){all.push("m"+i);});
+    HAIR[dow].steps.forEach(function(_,i){all.push("h"+i);});
+    if(HAIR[dow].nightSteps)HAIR[dow].nightSteps.forEach(function(_,i){all.push("hn"+i);});
+    WORKOUT[dow].exercises.forEach(function(_,i){all.push("wo"+i);});
+    VITAMINS.filter(function(v){return!v.p;}).forEach(function(v){all.push("vit_"+v.id);});
+    all.push("beer_done","gamble_done");
+    var done=all.filter(function(k){return state[k];}).length;
+    var pct=all.length?Math.round((done/all.length)*100):0;
+    var pc=pct===100?"var(--green)":pct>66?"var(--teal)":pct>33?"var(--gold)":"var(--red)";
+    h+='<div class="score-card" style="'+(pct===100?'background:#081a0c;border-color:var(--green)30':'')+'"><div class="orb" style="font-size:9px;color:var(--text3);letter-spacing:3px;margin-bottom:10px">DAY SCORE</div>';
+    h+='<div style="font-family:Orbitron;font-size:48px;font-weight:900;color:'+pc+';line-height:1">'+pct+'<span style="font-size:20px">%</span></div>';
+    h+='<div style="font-size:11px;color:var(--text3);margin-top:10px;letter-spacing:2px">'+(pct===100?"PROTOCOL COMPLETE":(all.length-done)+" ITEMS REMAINING")+'</div></div>';
+  }
+  h+='</div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+function setBeer(v){if(viewDateStr!==todayStr)return;saveState({beer_done:v});updateHeader();renderLife();}
+function setBeerCount(n){if(viewDateStr!==todayStr)return;saveState({beer_count:n});renderLife();}
+function setGamble(v){if(viewDateStr!==todayStr)return;saveState({gamble_done:v});updateHeader();renderLife();}
+function setGambleWhat(v){if(viewDateStr!==todayStr)return;saveState({gamble_what:v});}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+render();
+fetchHevy();
+</script>
+</body>
+</html>
