@@ -206,7 +206,7 @@ input::placeholder{color:var(--text3)}
 
 <script>
 // ── CONFIG ───────────────────────────────────────────────────────────────────
-const HEVY_KEY = "c7e3e77a-af83-47f5-ac68-e91055e8d49b";
+const HEVY_KEY = "YOUR_NEW_HEVY_KEY";
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 const MONTHS=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
@@ -812,6 +812,12 @@ function renderWorkout() {
 }
 
 // ── STRETCH ───────────────────────────────────────────────────────────────────
+// which days have gym, which have MMA, which have both
+const DAY_HAS_GYM = {0:false,1:true,2:true,3:true,4:false,5:true,6:true};
+const DAY_HAS_MMA = {0:true,1:false,2:false,3:false,4:true,5:false,6:false};
+
+let stretchSource = "gym"; // "gym" or "mma" — only relevant on days with both
+
 function renderStretchItems(items, keyPrefix, accentColor, accentHex) {
   const isToday = viewDateStr === todayStr;
   let h = "";
@@ -819,7 +825,7 @@ function renderStretchItems(items, keyPrefix, accentColor, accentHex) {
     const k=`${keyPrefix}${i}`;const done=getTick(k);const open=openStretch===`${keyPrefix}_${i}`;
     h+=`<div class="stretch-card" style="border-color:${done?accentColor+"40":"var(--border)"}">
       <div class="stretch-header ${done?"row-done":""}" onclick="openStretch=openStretch==='${keyPrefix}_${i}'?null:'${keyPrefix}_${i}';renderStretch()">
-        <div class="checkbox ${done?"done":""}" style="border-color:${done?accentColor:"var(--border2)"};background:${done?accentColor:"transparent"};box-shadow:${done?`0 0 8px ${accentHex}50`:"none"}" onclick="event.stopPropagation();${isToday?`toggleTick('${k}')`:""}">
+        <div class="checkbox ${done?"done":""}" style="border-color:${done?accentColor:"var(--border2)"};background:${done?accentColor:"transparent"};box-shadow:${done?"0 0 8px "+accentHex+"50":"none"}" onclick="event.stopPropagation();${isToday?"toggleTick('"+k+"')":""}">
           ${done?"<span>✓</span>":""}
         </div>
         <div style="flex:1">
@@ -828,22 +834,7 @@ function renderStretchItems(items, keyPrefix, accentColor, accentHex) {
         </div>
         <span style="color:var(--text3);font-size:10px">${open?"▲":"▼"}</span>
       </div>
-      ${open?`<div class="stretch-expand">
-        <div class="expand-label">STEPS</div>
-        <div class="stretch-steps">
-          ${s.steps.map((step,j)=>`<div class="stretch-step"><span class="recipe-step-num">${j+1}.</span><span class="recipe-step-text">${step}</span></div>`).join("")}
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <div class="info-box" style="background:var(--bg2);border:1px solid #1a4a2a">
-            <div class="orb" style="font-size:7px;color:#2a6a3a;letter-spacing:1px;margin-bottom:4px">BREATHING</div>
-            <div style="font-size:11px;color:#4a8a5a;line-height:1.5">${s.breath}</div>
-          </div>
-          <div class="info-box" style="background:var(--bg2);border:1px solid #3a1818">
-            <div class="orb" style="font-size:7px;color:#5a2a2a;letter-spacing:1px;margin-bottom:4px">COMMON MISTAKE</div>
-            <div style="font-size:11px;color:#7a3a3a;line-height:1.5">${s.mistake}</div>
-          </div>
-        </div>
-      </div>`:""}
+      ${open?"<div class='stretch-expand'><div class='expand-label'>STEPS</div><div class='stretch-steps'>"+s.steps.map((step,j)=>"<div class='stretch-step'><span class='recipe-step-num'>"+(j+1)+".</span><span class='recipe-step-text'>"+step+"</span></div>").join("")+"</div><div style='display:flex;gap:8px;flex-wrap:wrap'><div class='info-box' style='background:var(--bg2);border:1px solid #1a4a2a'><div class='orb' style='font-size:7px;color:#2a6a3a;letter-spacing:1px;margin-bottom:4px'>BREATHING</div><div style='font-size:11px;color:#4a8a5a;line-height:1.5'>"+s.breath+"</div></div><div class='info-box' style='background:var(--bg2);border:1px solid #3a1818'><div class='orb' style='font-size:7px;color:#5a2a2a;letter-spacing:1px;margin-bottom:4px'>COMMON MISTAKE</div><div style='font-size:11px;color:#7a3a3a;line-height:1.5'>"+s.mistake+"</div></div></div></div>":""}
     </div>`;
   });
   return h;
@@ -852,40 +843,55 @@ function renderStretchItems(items, keyPrefix, accentColor, accentHex) {
 function renderStretch() {
   const vd = new Date(viewDateStr+"T12:00:00");
   const dow = vd.getDay();
-  const stretches = STRETCHES[dow];
-  const warmupLen = (stretches.warmup||[]).length;
+  const hasGym = DAY_HAS_GYM[dow];
+  const hasMMA = DAY_HAS_MMA[dow];
+  const hasBoth = hasGym && hasMMA;
 
-  const tabs = [
-    {id:"warmup",label:"WARM-UP",color:"var(--orange)",hex:"#ff9040"},
-    {id:"cooldown",label:"COOL-DOWN",color:"var(--purple)",hex:"#b088ff"},
-    {id:"gym_pre",label:"GYM PRE",color:"var(--teal)",hex:"#4af0c8"},
-    {id:"gym_post",label:"GYM POST",color:"var(--green)",hex:"#30e888"},
-    {id:"mma_warmup",label:"MMA WARM",color:"var(--red)",hex:"#ff5555"},
-    {id:"mma_cooldown",label:"MMA COOL",color:"var(--blue)",hex:"#60b8ff"},
-  ];
+  // On days with only one type, lock source accordingly
+  if (!hasBoth) stretchSource = hasGym ? "gym" : "mma";
 
-  const activeTab = tabs.find(t=>t.id===stretchMode)||tabs[1];
+  // Get the right stretch data set
+  const gymStretches = STRETCHES[dow]; // workout-specific gym stretches
+  const source = stretchSource;
 
-  let h=`<div class="section" style="padding:14px 18px">
-    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
-      ${tabs.map(t=>`<button class="toggle-btn ${stretchMode===t.id?"active":""}" style="${stretchMode===t.id?`background:#162a40;border-color:${t.color};color:${t.color}`:""};flex:1 1 auto;min-width:80px;font-size:8px;padding:8px 6px" onclick="stretchMode='${t.id}';openStretch=null;renderStretch()">${t.label}</button>`).join("")}
-    </div>
-    <div class="orb" style="font-size:9px;color:${activeTab.color};letter-spacing:2px;margin-bottom:12px">${activeTab.label}</div>`;
-
-  if (stretchMode === "warmup") {
-    h += renderStretchItems(stretches.warmup||[], "sw", activeTab.color, activeTab.hex);
-  } else if (stretchMode === "cooldown") {
-    h += renderStretchItems(stretches.cooldown||[], "sc", activeTab.color, activeTab.hex);
-  } else if (stretchMode === "gym_pre") {
-    h += renderStretchItems(GYM_STRETCHES.pre, "gp", activeTab.color, activeTab.hex);
-  } else if (stretchMode === "gym_post") {
-    h += renderStretchItems(GYM_STRETCHES.post, "go", activeTab.color, activeTab.hex);
-  } else if (stretchMode === "mma_warmup") {
-    h += renderStretchItems(MMA_STRETCHES.warmup, "mw", activeTab.color, activeTab.hex);
-  } else if (stretchMode === "mma_cooldown") {
-    h += renderStretchItems(MMA_STRETCHES.cooldown, "mc", activeTab.color, activeTab.hex);
+  // Determine items based on mode + source
+  let items, keyPrefix, accentColor, accentHex, sectionLabel;
+  if (source === "gym") {
+    if (stretchMode === "warmup") {
+      items = gymStretches.warmup||[]; keyPrefix="sw"; accentColor="var(--orange)"; accentHex="#ff9040";
+      sectionLabel = gymStretches.label+" — WARM-UP";
+    } else {
+      items = gymStretches.cooldown||[]; keyPrefix="sc"; accentColor="var(--purple)"; accentHex="#b088ff";
+      sectionLabel = gymStretches.label+" — COOL-DOWN";
+    }
+  } else {
+    if (stretchMode === "warmup") {
+      items = MMA_STRETCHES.warmup; keyPrefix="mw"; accentColor="var(--red)"; accentHex="#ff5555";
+      sectionLabel = "MMA / MUAY THAI — WARM-UP";
+    } else {
+      items = MMA_STRETCHES.cooldown; keyPrefix="mc"; accentColor="var(--blue)"; accentHex="#60b8ff";
+      sectionLabel = "MMA / MUAY THAI — COOL-DOWN";
+    }
   }
 
+  let h=`<div class="section" style="padding:14px 18px">`;
+
+  // Source toggle (only on days with both — future proofed)
+  if (hasBoth) {
+    h+=`<div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="toggle-btn ${source==="gym"?"active":""}" style="${source==="gym"?"background:#162a40;border-color:var(--teal);color:var(--teal)":""}" onclick="stretchSource='gym';openStretch=null;renderStretch()">🏋️ GYM</button>
+      <button class="toggle-btn ${source==="mma"?"active":""}" style="${source==="mma"?"background:#1a1020;border-color:var(--red);color:var(--red)":""}" onclick="stretchSource='mma';openStretch=null;renderStretch()">🥊 MMA</button>
+    </div>`;
+  }
+
+  // Warm-up / Cool-down toggle
+  h+=`<div class="toggle-group">
+    <button class="toggle-btn ${stretchMode==="warmup"?"active":""}" style="${stretchMode==="warmup"?"background:#162a40;border-color:var(--orange);color:var(--orange)":""}" onclick="stretchMode='warmup';openStretch=null;renderStretch()">WARM-UP</button>
+    <button class="toggle-btn ${stretchMode==="cooldown"?"active":""}" style="${stretchMode==="cooldown"?"background:#162a40;border-color:var(--purple);color:var(--purple)":""}" onclick="stretchMode='cooldown';openStretch=null;renderStretch()">COOL-DOWN</button>
+  </div>
+  <div class="orb" style="font-size:9px;color:${accentColor};letter-spacing:2px;margin-bottom:12px">${sectionLabel}</div>`;
+
+  h += renderStretchItems(items, keyPrefix, accentColor, accentHex);
   h+=`</div>`;
   document.getElementById("content").innerHTML = h;
 }
