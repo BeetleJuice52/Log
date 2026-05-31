@@ -206,7 +206,7 @@ input::placeholder{color:var(--text3)}
 
 <script>
 // ── CONFIG ───────────────────────────────────────────────────────────────────
-const HEVY_KEY = "2a59410e-031f-4c10-afd3-cd5be6eba00f";
+const HEVY_KEY = "YOUR_NEW_HEVY_KEY";
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 const MONTHS=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
@@ -426,6 +426,47 @@ const todayStr = todayDate.toISOString().split("T")[0];
 let viewDateStr = todayStr;
 let currentTab = "meals";
 let stretchMode = "cooldown";
+let gymStretchMode = "pre";
+let mmaStretchMode = "warmup";
+
+// ── GYM STRETCHES ────────────────────────────────────────────────────────────
+const GYM_STRETCHES = {
+  pre: [
+    {name:"Hip Flexor Lunge Hold",dur:"30s each side",steps:["Step one foot forward into a deep lunge","Lower back knee to floor","Shift weight forward until you feel a stretch in the front of the back hip","Keep torso tall, hands on front knee","Hold steady — no bouncing"],breath:"Slow exhale to sink deeper each breath",mistake:"Don't arch your lower back — tuck pelvis slightly to increase the stretch"},
+    {name:"World's Greatest Stretch",dur:"5 reps each side",steps:["Start in a deep lunge, front foot flat","Place same-side hand on floor inside your front foot","Rotate opposite arm up toward the ceiling, eyes following it","Hold 2 seconds at top, return hand to floor","Step forward, switch sides"],breath:"Inhale to brace, exhale as you rotate upward",mistake:"Don't rush — move through full range on each rep"},
+    {name:"Thoracic Rotation",dur:"8 reps each side",steps:["Sit or kneel, arms crossed over chest","Rotate torso right as far as comfortable, hold 1–2 seconds","Return to centre, rotate left","Keep hips stable throughout"],breath:"Exhale as you rotate, inhale returning to centre",mistake:"Rotation comes from upper back only — not the hips"},
+    {name:"Ankle Circles + Calf Raise",dur:"10 reps each",steps:["Stand on one foot, rotate ankle 10 circles each direction","Then rise onto toes 10 slow reps","Lower heel fully to floor each rep, switch feet"],breath:"Breathe normally",mistake:"Don't let knee cave inward on the calf raises"},
+    {name:"Arm Across Chest + Tricep Stretch",dur:"20s each position each arm",steps:["Pull arm across chest — hold 20s","Raise same arm overhead, bend at elbow, press elbow back — hold 20s","Switch arms"],breath:"Long exhale on each hold",mistake:"Don't shrug the shoulder being stretched"},
+  ],
+  post: [
+    {name:"Standing Quad Stretch",dur:"60s each side",steps:["Stand on one leg, pull opposite heel to glute","Keep knees together, stay tall","Use wall for balance if needed","Tilt pelvis slightly forward to intensify"],breath:"Long exhale to increase the pull",mistake:"Don't lean forward — knees together is the key"},
+    {name:"Doorway Chest Stretch",dur:"45s each side",steps:["Arm at 90 degrees on doorframe or rack","Step forward until stretch felt across chest","Adjust arm height: higher = upper pec, lower = lower pec"],breath:"Long slow exhale to open the chest",mistake:"Don't twist torso — keep hips and shoulders square"},
+    {name:"Lat Hang",dur:"45–60s",steps:["Dead hang from pull-up bar — fully passive","Let shoulders rise up around ears","Feel spine decompress and lats release"],breath:"Full slow exhales — feel rib cage drop with each one",mistake:"Don't engage your lats — pure passive hang"},
+    {name:"Seated Piriformis Stretch",dur:"60s each side",steps:["Sit on bench or floor, cross ankle over opposite knee (figure-4)","Flex foot to protect knee","Sit tall and lean slightly forward from hips"],breath:"Exhale and lean forward slightly to deepen",mistake:"Sit tall — slumping removes the stretch"},
+    {name:"Child's Pose",dur:"60s",steps:["Kneel, sit back toward heels","Arms extended forward on floor","Let chest sink toward ground, walk hands further for more stretch"],breath:"4 count inhale — feel back expand. 6 count exhale — melt into floor",mistake:"Place pillow under hips if they don't reach heels"},
+    {name:"Calf Wall Stretch",dur:"45s each side",steps:["Face wall, hands on wall","Step one foot back, heel flat on floor","Front knee bends, back leg stays straight, lean in"],breath:"Long exhale to relax into stretch",mistake:"Heel must stay flat — lifting it removes the stretch entirely"},
+  ],
+};
+
+// ── MMA STRETCHES ────────────────────────────────────────────────────────────
+const MMA_STRETCHES = {
+  warmup: [
+    {name:"Jump Rope / Shadow Skip",dur:"2 min",steps:["Stay on balls of your feet — light quick bounces","Alternate two-foot bounce and running in place","Gradually increase pace over 2 min"],breath:"Breathe through nose if possible to regulate intensity",mistake:"Don't tense your shoulders — keep them relaxed and low"},
+    {name:"Hip Circle + High Knees",dur:"30s each movement",steps:["Hip circles: hands on hips, large circles each direction 30s","High knee march: drive knees up alternating, arms pumping","High knee run: same but faster 30s","Heel kicks: kick heels to glutes alternating"],breath:"Breathe naturally and rhythmically",mistake:"Quality of movement matters more than speed"},
+    {name:"Shoulder Roll + Punch Out",dur:"20 reps",steps:["Roll shoulders back 10 times","Alternate: extend one arm forward into a slow punch","Rotate through torso with each punch, other hand at chin guard","Gradually add rotation and speed"],breath:"Sharp exhale with each punch — train the breathing pattern",mistake:"Rotation comes from hips and core — not just the arm"},
+    {name:"Lateral Lunge + Hip Opener",dur:"8 reps each side",steps:["Stand feet wide, shift weight to one side bending that knee","Keep other leg straight, sink low","Push bent knee out with elbow, hold 2 seconds, switch sides"],breath:"Exhale as you sink into the lunge",mistake:"Don't let bent knee cave inward — drive it out"},
+    {name:"Neck Rolls",dur:"30s each direction",steps:["Drop chin to chest","Slowly roll head to right shoulder, continue around the full circle","Reverse direction after 30s"],breath:"Breathe normally — stay relaxed throughout",mistake:"Keep it gentle — no aggressive rolls"},
+  ],
+  cooldown: [
+    {name:"Hip Flexor Lunge Stretch",dur:"60s each side",steps:["Rear knee on floor, front foot flat","Shift weight forward, torso tall and upright","Tuck pelvis slightly for more depth"],breath:"4 count inhale, 6 count exhale — sink deeper on each exhale",mistake:"Don't arch lower back — stretch is in front of hip"},
+    {name:"Butterfly Groin Stretch",dur:"90s",steps:["Sit on floor, soles of feet together","Sit tall — do not round your back","Gently press knees toward floor with your elbows"],breath:"Each exhale, let knees drop a little further",mistake:"Light elbow pressure only — or just let gravity work"},
+    {name:"Standing Quad Stretch",dur:"45s each side",steps:["Balance on one leg","Pull opposite heel to glute, keep knees together, stay upright"],breath:"Slow exhale to increase pull",mistake:"Knees drifting apart significantly reduces the stretch"},
+    {name:"Spinal Twist — Supine",dur:"45s each side",steps:["Lie on back, draw one knee to chest","Cross knee over body toward floor on opposite side","Opposite arm extended, look the other way","Keep both shoulders flat on floor"],breath:"Inhale to create length, exhale to let knee drop further",mistake:"Don't force shoulder off floor to get knee lower"},
+    {name:"Pigeon Pose",dur:"60s each side",steps:["Bring one shin forward roughly parallel to mat","Extend other leg straight back","Lower hips — towel under front hip if needed","Walk hands forward and lower chest"],breath:"4 count inhale, 6 count exhale — main recovery stretch",mistake:"No sharp knee pain ever — back off immediately"},
+    {name:"Neck Side Stretch",dur:"30s each side",steps:["Drop right ear toward right shoulder","Place right hand gently on top of head — no pulling","Feel stretch along left side of neck, switch sides"],breath:"Long exhale deepens the stretch gently",mistake:"Don't pull head down with force — hand weight is enough"},
+    {name:"Box Breathing",dur:"3 min",steps:["Lie on back, eyes closed","Inhale through nose 4 counts, hold 4 counts","Exhale through mouth 4 counts, hold empty 4 counts","Repeat 8–10 cycles"],breath:"This IS the exercise — nervous system downregulation",mistake:"Reduce to 3 counts if 4 feels stressful"},
+  ],
+};
 let openMeal = null;
 let openStretch = null;
 let openNote = null;
@@ -771,27 +812,14 @@ function renderWorkout() {
 }
 
 // ── STRETCH ───────────────────────────────────────────────────────────────────
-function renderStretch() {
-  const vd = new Date(viewDateStr+"T12:00:00");
-  const dow = vd.getDay();
+function renderStretchItems(items, keyPrefix, accentColor, accentHex) {
   const isToday = viewDateStr === todayStr;
-  const stretches = STRETCHES[dow];
-  const items = stretches[stretchMode]||[];
-  const warmupLen = (stretches.warmup||[]).length;
-
-  let h=`<div class="section" style="padding:14px 18px">
-    <div class="toggle-group">
-      <button class="toggle-btn ${stretchMode==="warmup"?"active":""}" onclick="stretchMode='warmup';renderStretch()">WARM-UP</button>
-      <button class="toggle-btn ${stretchMode==="cooldown"?"active":""}" onclick="stretchMode='cooldown';renderStretch()">COOL-DOWN</button>
-    </div>
-    <div class="orb" style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:12px">${stretches.label.toUpperCase()} — ${stretchMode.toUpperCase()}</div>`;
-
+  let h = "";
   items.forEach((s,i) => {
-    const globalIdx = stretchMode==="cooldown" ? warmupLen+i : i;
-    const k=`s${globalIdx}`;const done=getTick(k);const open=openStretch===`${stretchMode}_${i}`;
-    h+=`<div class="stretch-card" style="border-color:${done?"var(--purple)40":"var(--border)"}">
-      <div class="stretch-header ${done?"row-done":""}" onclick="openStretch=openStretch==='${stretchMode}_${i}'?null:'${stretchMode}_${i}';renderStretch()">
-        <div class="checkbox ${done?"done":""}" style="border-color:${done?"var(--purple)":"var(--border2)"};background:${done?"var(--purple)":"transparent"};box-shadow:${done?"0 0 8px #b088ff50":"none"}" onclick="event.stopPropagation();${isToday?`toggleTick('${k}')`:""}">
+    const k=`${keyPrefix}${i}`;const done=getTick(k);const open=openStretch===`${keyPrefix}_${i}`;
+    h+=`<div class="stretch-card" style="border-color:${done?accentColor+"40":"var(--border)"}">
+      <div class="stretch-header ${done?"row-done":""}" onclick="openStretch=openStretch==='${keyPrefix}_${i}'?null:'${keyPrefix}_${i}';renderStretch()">
+        <div class="checkbox ${done?"done":""}" style="border-color:${done?accentColor:"var(--border2)"};background:${done?accentColor:"transparent"};box-shadow:${done?`0 0 8px ${accentHex}50`:"none"}" onclick="event.stopPropagation();${isToday?`toggleTick('${k}')`:""}">
           ${done?"<span>✓</span>":""}
         </div>
         <div style="flex:1">
@@ -818,6 +846,46 @@ function renderStretch() {
       </div>`:""}
     </div>`;
   });
+  return h;
+}
+
+function renderStretch() {
+  const vd = new Date(viewDateStr+"T12:00:00");
+  const dow = vd.getDay();
+  const stretches = STRETCHES[dow];
+  const warmupLen = (stretches.warmup||[]).length;
+
+  const tabs = [
+    {id:"warmup",label:"WARM-UP",color:"var(--orange)",hex:"#ff9040"},
+    {id:"cooldown",label:"COOL-DOWN",color:"var(--purple)",hex:"#b088ff"},
+    {id:"gym_pre",label:"GYM PRE",color:"var(--teal)",hex:"#4af0c8"},
+    {id:"gym_post",label:"GYM POST",color:"var(--green)",hex:"#30e888"},
+    {id:"mma_warmup",label:"MMA WARM",color:"var(--red)",hex:"#ff5555"},
+    {id:"mma_cooldown",label:"MMA COOL",color:"var(--blue)",hex:"#60b8ff"},
+  ];
+
+  const activeTab = tabs.find(t=>t.id===stretchMode)||tabs[1];
+
+  let h=`<div class="section" style="padding:14px 18px">
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+      ${tabs.map(t=>`<button class="toggle-btn ${stretchMode===t.id?"active":""}" style="${stretchMode===t.id?`background:#162a40;border-color:${t.color};color:${t.color}`:""};flex:1 1 auto;min-width:80px;font-size:8px;padding:8px 6px" onclick="stretchMode='${t.id}';openStretch=null;renderStretch()">${t.label}</button>`).join("")}
+    </div>
+    <div class="orb" style="font-size:9px;color:${activeTab.color};letter-spacing:2px;margin-bottom:12px">${activeTab.label}</div>`;
+
+  if (stretchMode === "warmup") {
+    h += renderStretchItems(stretches.warmup||[], "sw", activeTab.color, activeTab.hex);
+  } else if (stretchMode === "cooldown") {
+    h += renderStretchItems(stretches.cooldown||[], "sc", activeTab.color, activeTab.hex);
+  } else if (stretchMode === "gym_pre") {
+    h += renderStretchItems(GYM_STRETCHES.pre, "gp", activeTab.color, activeTab.hex);
+  } else if (stretchMode === "gym_post") {
+    h += renderStretchItems(GYM_STRETCHES.post, "go", activeTab.color, activeTab.hex);
+  } else if (stretchMode === "mma_warmup") {
+    h += renderStretchItems(MMA_STRETCHES.warmup, "mw", activeTab.color, activeTab.hex);
+  } else if (stretchMode === "mma_cooldown") {
+    h += renderStretchItems(MMA_STRETCHES.cooldown, "mc", activeTab.color, activeTab.hex);
+  }
+
   h+=`</div>`;
   document.getElementById("content").innerHTML = h;
 }
